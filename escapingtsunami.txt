@@ -1,0 +1,143 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- ===== TOẠ ĐỘ =====
+local points = {
+    Vector3.new(202.39,-2.77,2.17),
+    Vector3.new(399.35,-2.77,1.66),
+    Vector3.new(543.93,-2.77,1.36),
+    Vector3.new(757.56,-2.77,2.85),
+    Vector3.new(1075.22,-2.77,2.51),
+    Vector3.new(1560.28,-2.77,5.40),
+    Vector3.new(2606.38,-2.77,-0.52),
+    Vector3.new(2261.83,-2.77,7.93),
+    Vector3.new(2606.38,-2.77,-0.52),
+}
+
+local index = 1
+local SPEED = 200
+local InfiniteCam = false
+
+-- ===== GUI =====
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.ResetOnSpawn = false
+
+-- NÚT ẨN MENU (HÌNH VUÔNG)
+local ToggleImg = Instance.new("ImageButton", ScreenGui)
+ToggleImg.Size = UDim2.new(0,60,0,60)
+ToggleImg.Position = UDim2.new(0.5,-30,0.5,-30)
+ToggleImg.Image = "http://www.roblox.com/asset/?id=106971854647822"
+ToggleImg.BackgroundTransparency = 1
+ToggleImg.Active = true
+ToggleImg.Draggable = true
+
+-- MENU
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0,220,0,360)
+Main.Position = UDim2.new(0.5,-110,0.5,-180)
+Main.BackgroundColor3 = Color3.new(0,0,0)
+Main.BorderSizePixel = 2
+Main.BorderColor3 = Color3.new(1,1,1)
+Main.Active = true
+Main.Draggable = true
+
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1,0,0,40)
+Title.BackgroundTransparency = 1
+Title.Text = "Escape tsunami"
+Title.TextColor3 = Color3.new(1,1,1)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 22
+
+local function Button(text,y,color)
+    local b = Instance.new("TextButton", Main)
+    b.Size = UDim2.new(0.85,0,0,40)
+    b.Position = UDim2.new(0.075,0,0,y)
+    b.BackgroundColor3 = color
+    b.Text = text
+    b.TextColor3 = Color3.new(1,1,1)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 18
+    return b
+end
+
+local UpBtn   = Button("LÊN",60,Color3.fromRGB(0,180,0))
+local DownBtn = Button("XUỐNG",110,Color3.fromRGB(0,180,0))
+local CamBtn  = Button("CAM VÔ HẠN: OFF",160,Color3.fromRGB(180,0,0))
+
+local SpeedLabel = Instance.new("TextLabel", Main)
+SpeedLabel.Size = UDim2.new(0.8,0,0,30)
+SpeedLabel.Position = UDim2.new(0.1,0,0,220)
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.Text = "TỐC ĐỘ: "..SPEED
+SpeedLabel.TextColor3 = Color3.new(1,1,1)
+SpeedLabel.Font = Enum.Font.GothamBold
+SpeedLabel.TextSize = 18
+
+local MinusBtn = Button("-",260,Color3.fromRGB(180,0,0))
+MinusBtn.Size = UDim2.new(0.35,0,0,40)
+
+local PlusBtn = Button("+",260,Color3.fromRGB(0,180,0))
+PlusBtn.Size = UDim2.new(0.35,0,0,40)
+PlusBtn.Position = UDim2.new(0.55,0,0,260)
+
+-- ===== LOGIC =====
+local function moveTo(pos)
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local dist = (hrp.Position - pos).Magnitude
+    TweenService:Create(
+        hrp,
+        TweenInfo.new(dist / SPEED, Enum.EasingStyle.Linear),
+        {CFrame = CFrame.new(pos)}
+    ):Play()
+end
+
+UpBtn.MouseButton1Click:Connect(function()
+    moveTo(points[index])
+    index = math.clamp(index + 1,1,#points)
+end)
+
+DownBtn.MouseButton1Click:Connect(function()
+    index = math.clamp(index - 1,1,#points)
+    moveTo(points[index])
+end)
+
+CamBtn.MouseButton1Click:Connect(function()
+    InfiniteCam = not InfiniteCam
+    CamBtn.Text = "CAM VÔ HẠN: "..(InfiniteCam and "ON" or "OFF")
+    CamBtn.BackgroundColor3 = InfiniteCam and Color3.fromRGB(0,180,0) or Color3.fromRGB(180,0,0)
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if InfiniteCam and input.UserInputType == Enum.UserInputType.MouseWheel then
+        Camera.FieldOfView = math.clamp(Camera.FieldOfView - input.Position.Z * 15, 1, 500)
+    end
+end)
+
+MinusBtn.MouseButton1Click:Connect(function()
+    SPEED = math.max(50, SPEED - 25)
+    SpeedLabel.Text = "TỐC ĐỘ: "..SPEED
+end)
+
+PlusBtn.MouseButton1Click:Connect(function()
+    SPEED = math.min(600, SPEED + 25)
+    SpeedLabel.Text = "TỐC ĐỘ: "..SPEED
+end)
+
+ToggleImg.MouseButton1Click:Connect(function()
+    Main.Visible = not Main.Visible
+end)
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    index = 1
+    task.wait(0.2)
+    char:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(points[1])
+end)
