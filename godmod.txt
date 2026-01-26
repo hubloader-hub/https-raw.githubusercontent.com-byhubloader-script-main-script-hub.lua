@@ -1,0 +1,71 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "godmod_by_HubLoader"
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+local Main = Instance.new("Frame")
+Main.Parent = ScreenGui
+Main.Size = UDim2.new(0,220,0,120)
+Main.Position = UDim2.new(0.4,0,0.3,0)
+Main.BackgroundColor3 = Color3.fromRGB(35,35,35)
+Main.Active = true
+Main.Draggable = true
+
+local UICorner = Instance.new("UICorner",Main)
+UICorner.CornerRadius = UDim.new(0,8)
+
+local Title = Instance.new("TextLabel")
+Title.Parent = Main
+Title.Size = UDim2.new(1,0,0,30)
+Title.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Title.Text = "godmod by HubLoader"
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 18
+
+local TitleCorner = Instance.new("UICorner",Title)
+TitleCorner.CornerRadius = UDim.new(0,8)
+
+local Toggle = Instance.new("TextButton")
+Toggle.Parent = Main
+Toggle.Size = UDim2.new(0,160,0,40)
+Toggle.Position = UDim2.new(0.5,-80,0,55)
+Toggle.BackgroundColor3 = Color3.fromRGB(200,50,50)
+Toggle.Text = "Killbrick : OFF"
+Toggle.TextColor3 = Color3.fromRGB(255,255,255)
+Toggle.Font = Enum.Font.SourceSansBold
+Toggle.TextSize = 16
+
+local ToggleCorner = Instance.new("UICorner",Toggle)
+ToggleCorner.CornerRadius = UDim.new(0,6)
+
+local enabled = false
+
+Toggle.MouseButton1Click:Connect(function()
+	enabled = not enabled
+	if enabled then
+		Toggle.Text = "Killbrick : ON"
+		Toggle.BackgroundColor3 = Color3.fromRGB(50,200,50)
+	else
+		Toggle.Text = "Killbrick : OFF"
+		Toggle.BackgroundColor3 = Color3.fromRGB(200,50,50)
+	end
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(0.1)
+		if enabled then
+			local char = player.Character
+			if char and char:FindFirstChild("HumanoidRootPart") then
+				local hrp = char.HumanoidRootPart
+				for _,p in ipairs(workspace:GetPartBoundsInRadius(hrp.Position,12)) do
+					p.CanTouch = false
+				end
+			end
+		end
+	end
+end)
