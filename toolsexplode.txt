@@ -1,0 +1,37 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+local tool = Instance.new("Tool")
+tool.Name = "Nổ"
+tool.RequiresHandle = false
+tool.Parent = player.Backpack
+
+local sound = Instance.new("Sound")
+sound.SoundId = "rbxassetid://138186576"
+sound.Volume = 5
+sound.RollOffMaxDistance = 150
+sound.Parent = humanoidRootPart
+
+tool.Activated:Connect(function()
+	local explosion = Instance.new("Explosion")
+	explosion.Position = humanoidRootPart.Position
+	explosion.BlastRadius = 25
+	explosion.BlastPressure = 0
+	explosion.Parent = workspace
+
+	sound:Play()
+
+	local bodyVelocity = Instance.new("BodyVelocity")
+	bodyVelocity.Velocity = Vector3.new(
+		math.random(-220,220),
+		160,
+		math.random(-220,220)
+	)
+	bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+	bodyVelocity.Parent = humanoidRootPart
+
+	task.delay(0.35, function()
+		bodyVelocity:Destroy()
+	end)
+end)
