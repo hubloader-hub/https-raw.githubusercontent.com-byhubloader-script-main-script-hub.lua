@@ -1,0 +1,258 @@
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local GuiService = game:GetService("GuiService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+local Player = Players.LocalPlayer
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "HubLoaderGui"
+gui.ResetOnSpawn = false
+gui.Parent = Player:WaitForChild("PlayerGui")
+
+-- MAIN FRAME
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 500, 0, 300)
+main.Position = UDim2.new(0.5, 0, 0.5, 0)
+main.AnchorPoint = Vector2.new(0.5, 0.5)
+main.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+main.BorderSizePixel = 0
+main.Parent = gui
+
+-- TOP BAR (vùng drag)
+local top = Instance.new("Frame")
+top.Size = UDim2.new(1, 0, 0, 40)
+top.Position = UDim2.new(0, 0, 0, 0)
+top.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+top.BorderSizePixel = 0
+top.Active = true
+top.Selectable = true
+top.Parent = main
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 1, 0)
+title.BackgroundTransparency = 1
+title.Text = "HubLoader executor gui v2"
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 20
+title.TextColor3 = Color3.fromRGB(0, 0, 0)
+title.Parent = top
+
+-- DRAG SYSTEM (không jump, không kéo camera)
+local dragging = false
+local dragStartPos = nil
+local startGuiPos = nil
+
+local function updateDrag(input)
+    if not dragging then return end
+    local currentPos = input.Position
+    local delta = currentPos - dragStartPos
+    main.Position = UDim2.new(
+        startGuiPos.X.Scale,
+        startGuiPos.X.Offset + delta.X,
+        startGuiPos.Y.Scale,
+        startGuiPos.Y.Offset + delta.Y
+    )
+end
+
+top.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStartPos = input.Position
+        startGuiPos = main.Position
+        GuiService.SelectedObject = top
+        if UserInputService.MouseEnabled then
+            UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+        end
+        local conn
+        conn = input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+                GuiService.SelectedObject = nil
+                conn:Disconnect()
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        updateDrag(input)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+        GuiService.SelectedObject = nil
+    end
+end)
+
+-- SCRIPT BOX (TRÁI)
+local box = Instance.new("TextBox")
+box.Size = UDim2.new(0, 300, 0, 200)
+box.Position = UDim2.new(0, 10, 0, 50)
+box.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+box.TextColor3 = Color3.fromRGB(255, 255, 255)
+box.Font = Enum.Font.Code
+box.TextSize = 14
+box.MultiLine = true
+box.TextWrapped = true
+box.TextXAlignment = Enum.TextXAlignment.Left
+box.TextYAlignment = Enum.TextYAlignment.Top
+box.ClearTextOnFocus = false
+box.Parent = main
+
+-- EXEC
+local exec = Instance.new("TextButton")
+exec.Size = UDim2.new(0, 140, 0, 35)
+exec.Position = UDim2.new(0, 10, 1, -45)
+exec.Text = "executor"
+exec.Font = Enum.Font.SourceSansBold
+exec.TextSize = 16
+exec.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+exec.TextColor3 = Color3.fromRGB(255, 255, 255)
+exec.Parent = main
+
+exec.MouseButton1Click:Connect(function()
+    local f = loadstring(box.Text)
+    if f then pcall(f) end
+end)
+
+-- CLEAR
+local clear = Instance.new("TextButton")
+clear.Size = UDim2.new(0, 140, 0, 35)
+clear.Position = UDim2.new(0, 170, 1, -45)
+clear.Text = "xóa"
+clear.Font = Enum.Font.SourceSansBold
+clear.TextSize = 16
+clear.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+clear.TextColor3 = Color3.fromRGB(255, 255, 255)
+clear.Parent = main
+
+clear.MouseButton1Click:Connect(function()
+    box.Text = ""
+end)
+
+-- SCROLL FRAME (PHẢI)
+local scroll = Instance.new("ScrollingFrame")
+scroll.Size = UDim2.new(0, 160, 0, 200)
+scroll.Position = UDim2.new(1, -170, 0, 50)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.ScrollBarImageTransparency = 0
+scroll.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
+scroll.BorderSizePixel = 0
+scroll.Parent = main
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 8)
+layout.Parent = scroll
+
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+end)
+
+-- FUNCTION CREATE BUTTON
+local function addButton(name, scriptText)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -10, 0, 35)
+    btn.Text = name
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 14
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Parent = scroll
+
+    btn.MouseButton1Click:Connect(function()
+        box.Text = scriptText
+    end)
+end
+
+-- BUTTONS
+addButton("natuge", [[loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-natuge-FE-73244"))()]])
+addButton("gojo tool", [[loadstring(game:HttpGet("https://pastebin.com/raw/vzqZcTAU"))()]])
+addButton("Mystic tool", [[loadstring(game:HttpGet("https://pastefy.app/7R72UhO9/raw", true))()]])
+addButton("Primadon", [[loadstring(game:HttpGet("https://pastebin.com/raw/37iQzQp3", true))()]])
+addButton("Red Sword Pickaxe", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ProBypasserHax1/Idkkk/refs/heads/main/Red%20Sword%20Pickaxe.txt"))()]])
+addButton("Angel", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/nicolasbarbosa323/the-angel/refs/heads/main/The%20Angel.txt"))()]])
+addButton("Guest 666", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gObl00x/My-Scripts/refs/heads/main/Guest%20666.lua"))()]])
+addButton("dark titan", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gitezgitgit/Dark-Titan/refs/heads/main/DARK%20TITAN%20SCRIPT%20SUPER%20RARE.txt"))()]])
+addButton("soul reaper", [[loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Soul-Reaper-55330"))()]])
+addButton("Goner", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gObl00x/My-Converts/refs/heads/main/Goner.lua"))()]])
+addButton("wally west", [[loadstring(game:HttpGet("https://pastefy.app/N1v3fGIS/raw"))()]])
+addButton("neptunian v", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/NepV"))()]])
+addButton("Comedic Chao", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/Comedy"))()]])
+addButton("Blind Reaper", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/BLINDREAPER"))()]])
+
+local toggle = Instance.new("ImageButton")
+toggle.Size = UDim2.new(0, 90, 0, 90)
+toggle.Position = UDim2.new(0.5, 0, 0.5, 0)
+toggle.AnchorPoint = Vector2.new(0.5, 0.5)
+toggle.Image = "rbxassetid://99222845225092"
+toggle.BackgroundTransparency = 1
+toggle.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)
+corner.Parent = toggle
+
+task.delay(3, function()
+    TweenService:Create(
+        toggle,
+        TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        {Position = UDim2.new(0, 50, 0.5, 0)}
+    ):Play()
+end)
+
+toggle.MouseButton1Click:Connect(function()
+    main.Visible = not main.Visible
+end)
+
+local mainImageId = "rbxassetid://99222845225092"  
+local orbitRadius = 60   
+local numOrbs = 8        
+local speed = 1.5        
+
+local orbFolder = Instance.new("Folder")
+orbFolder.Name = "OrbitOrbs"
+orbFolder.Parent = gui
+
+local orbs = {}
+for i = 1, numOrbs do
+    local orb = Instance.new("ImageLabel")
+    orb.Size = UDim2.new(0, 10, 0, 10)
+    orb.BackgroundTransparency = 1
+    orb.Image = mainImageId
+    orb.ImageTransparency = 0.4
+    orb.AnchorPoint = Vector2.new(0.5, 0.5)
+    
+    local orbCorner = Instance.new("UICorner")
+    orbCorner.CornerRadius = UDim.new(1, 0)
+    orbCorner.Parent = orb
+    
+    orb.Parent = orbFolder
+    table.insert(orbs, orb)
+end
+
+local timePassed = 0
+RunService.Heartbeat:Connect(function(deltaTime)
+    if not toggle.Visible then 
+        for _, orb in ipairs(orbs) do orb.Visible = false end
+        return 
+    end
+    
+    for _, orb in ipairs(orbs) do orb.Visible = true end
+    
+    timePassed = timePassed + deltaTime * speed
+    local centerPos = toggle.AbsolutePosition + toggle.AbsoluteSize / 2
+    
+    for i, orb in ipairs(orbs) do
+        local angle = (timePassed + (i-1) * (2 * math.pi / numOrbs))
+        local offsetX = math.cos(angle) * orbitRadius
+        local offsetY = math.sin(angle) * orbitRadius
+        orb.Position = UDim2.new(0, centerPos.X + offsetX - 5, 0, centerPos.Y + offsetY - 5)
+    end
+end)
