@@ -1,40 +1,348 @@
---// UI
-local player = game.Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+local Player = Players.LocalPlayer
+
+-- GUI
 local gui = Instance.new("ScreenGui")
-gui.Name = "UpdateNotice"
+gui.Name = "HubLoaderGui"
 gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
+gui.Parent = Player:WaitForChild("PlayerGui")
 
-local textLabel = Instance.new("TextLabel")
-textLabel.Parent = gui
-textLabel.Size = UDim2.new(0, 600, 0, 80)
-textLabel.Position = UDim2.new(0.5, -300, 0.5, -40)
-textLabel.BackgroundTransparency = 1
-textLabel.Text = ""
-textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-textLabel.TextStrokeTransparency = 0.3
-textLabel.Font = Enum.Font.GothamBold
-textLabel.TextScaled = true
-textLabel.TextTransparency = 0
+-- Tween Info chung
+local tweenFast   = TweenInfo.new(0.25, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+local tweenMedium = TweenInfo.new(0.4,  Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
-local message = "đang cập nhật hãy đợi nếu muốn dùng sớm hãy liên hệ đến chúng tôi"
+-- MAIN FRAME - BẮT ĐẦU VISIBLE = true
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 500, 0, 300)
+main.Position = UDim2.new(0.5, 0, 0.5, 0)
+main.AnchorPoint = Vector2.new(0.5, 0.5)
+main.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+main.BorderSizePixel = 0
+main.ClipsDescendants = true
+main.Visible = true   -- ← thay đổi: menu hiện ngay từ đầu
+main.Parent = gui
 
---// Animation gõ chữ
-task.spawn(function()
-	for i = 1, #message do
-		textLabel.Text = string.sub(message, 1, i)
-		task.wait(0.05)
-	end
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.Parent = main
+
+-- TOP BAR (vùng kéo)
+local top = Instance.new("Frame")
+top.Size = UDim2.new(1, 0, 0, 40)
+top.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+top.BorderSizePixel = 0
+top.Active = true   -- cần để nhận input
+top.Parent = main
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -80, 1, 0)
+title.Position = UDim2.new(0, 12, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "HubLoader executor gui v3"
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 19
+title.TextColor3 = Color3.fromRGB(30, 30, 30)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = top
+
+-- DRAG SYSTEM - NGĂN CAMERA/MÀN HÌNH KÉO THEO
+local dragging = false
+local dragStartPos, startGuiPos
+
+top.InputBegan:Connect(function(input, gameProcessedEvent)
+    if gameProcessedEvent then return end   -- ngăn nếu Roblox đã xử lý (ví dụ chat, tool...)
+    
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStartPos = input.Position
+        startGuiPos = main.Position
+        
+        -- Quan trọng: Ngăn Roblox capture input để không xoay camera/kéo màn hình
+        input:Capture()
+    end
 end)
 
---// Giữ 15 giây
-task.wait(15)
+UserInputService.InputChanged:Connect(function(input)
+    if not dragging then return end
+    
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        local delta = input.Position - dragStartPos
+        main.Position = UDim2.new(
+            startGuiPos.X.Scale,
+            startGuiPos.X.Offset + delta.X,
+            startGuiPos.Y.Scale,
+            startGuiPos.Y.Offset + delta.Y
+        )
+    end
+end)
 
---// Fade out
-for i = 0, 1, 0.05 do
-	textLabel.TextTransparency = i
-	textLabel.TextStrokeTransparency = i
-	task.wait(0.05)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if dragging then
+            dragging = false
+            -- Giải phóng capture nếu có
+            if input:IsCaptured() then
+                input:Release()
+            end
+        end
+    end
+end)
+
+-- SCRIPT BOX
+local box = Instance.new("TextBox")
+box.Size = UDim2.new(0, 300, 0, 200)
+box.Position = UDim2.new(0, 10, 0, 50)
+box.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+box.TextColor3 = Color3.fromRGB(235, 235, 235)
+box.Font = Enum.Font.Code
+box.TextSize = 14
+box.MultiLine = true
+box.TextWrapped = true
+box.ClearTextOnFocus = false
+box.TextXAlignment = Enum.TextXAlignment.Left
+box.TextYAlignment = Enum.TextYAlignment.Top
+box.Parent = main
+
+local boxCorner = Instance.new("UICorner")
+boxCorner.CornerRadius = UDim.new(0, 8)
+boxCorner.Parent = box
+
+-- Nút executor & xóa
+local function createBtn(text, posX, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 140, 0, 38)
+    btn.Position = UDim2.new(0, posX, 1, -46)
+    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 16
+    btn.Text = text
+    btn.AutoButtonColor = false
+    btn.Parent = main
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 10)
+    corner.Parent = btn
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, tweenFast, {BackgroundColor3 = Color3.fromRGB(70,70,70)}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, tweenFast, {BackgroundColor3 = Color3.fromRGB(45,45,45)}):Play()
+    end)
+
+    btn.MouseButton1Down:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(100,100,100)}):Play()
+    end)
+    btn.MouseButton1Up:Connect(function()
+        TweenService:Create(btn, tweenFast, {BackgroundColor3 = Color3.fromRGB(70,70,70)}):Play()
+    end)
+
+    btn.MouseButton1Click:Connect(callback)
 end
 
-gui:Destroy()
+createBtn("executor", 10, function()
+    local f = loadstring(box.Text)
+    if f then pcall(f) end
+end)
+
+createBtn("xóa", 170, function()
+    box.Text = ""
+end)
+
+-- SCROLL FRAME
+local scroll = Instance.new("ScrollingFrame")
+scroll.Size = UDim2.new(0, 160, 0, 200)
+scroll.Position = UDim2.new(1, -170, 0, 50)
+scroll.CanvasSize = UDim2.new(0,0,0,0)
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 4
+scroll.ScrollBarImageColor3 = Color3.fromRGB(10,10,10)
+scroll.Parent = main
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 8)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.Parent = scroll
+
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 16)
+end)
+
+-- Hàm tạo nút script (trắng + animation)
+local function addButton(name, scriptText)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -12, 0, 34)
+    btn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    btn.Font = Enum.Font.SourceSansSemibold
+    btn.TextSize = 14
+    btn.Text = name
+    btn.AutoButtonColor = false
+    btn.Parent = scroll
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 9)
+    corner.Parent = btn
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(210,210,210)
+    stroke.Thickness = 1.2
+    stroke.Transparency = 0.3
+    stroke.Parent = btn
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, tweenFast, {
+            BackgroundColor3 = Color3.fromRGB(240,240,245),
+            Position = UDim2.new(0,6,0,0)
+        }):Play()
+        TweenService:Create(stroke, tweenFast, {Transparency = 0}):Play()
+    end)
+
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, tweenFast, {
+            BackgroundColor3 = Color3.fromRGB(200,200,200),
+            Position = UDim2.new(0,0,0,0)
+        }):Play()
+        TweenService:Create(stroke, tweenFast, {Transparency = 0.3}):Play()
+    end)
+
+    btn.MouseButton1Click:Connect(function()
+        box.Text = scriptText
+        local origSize = btn.Size
+        TweenService:Create(btn, TweenInfo.new(0.08,Enum.EasingStyle.Quad,Enum.EasingDirection.In), {
+            Size = UDim2.new(origSize.X.Scale, origSize.X.Offset*0.92, origSize.Y.Scale, origSize.Y.Offset*0.92)
+        }):Play()
+        task.delay(0.08, function()
+            TweenService:Create(btn, tweenFast, {Size = origSize}):Play()
+        end)
+    end)
+end
+
+-- Tất cả nút script (giữ nguyên)
+addButton("hồi sinh", [[local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+hrp.CFrame = CFrame.new(-69.57, -221.99, 67.20)
+]])
+addButton("natuge", [[loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-natuge-FE-73244"))()]])
+addButton("gojo tool", [[loadstring(game:HttpGet("https://pastebin.com/raw/vzqZcTAU"))()]])
+addButton("Mystic tool", [[loadstring(game:HttpGet("https://pastefy.app/7R72UhO9/raw", true))()]])
+addButton("Primadon", [[loadstring(game:HttpGet("https://pastebin.com/raw/37iQzQp3", true))()]])
+addButton("Red Sword Pickaxe", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ProBypasserHax1/Idkkk/refs/heads/main/Red%20Sword%20Pickaxe.txt"))()]])
+addButton("Angel", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/nicolasbarbosa323/the-angel/refs/heads/main/The%20Angel.txt"))()]])
+addButton("Guest 666", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gObl00x/My-Scripts/refs/heads/main/Guest%20666.lua"))()]])
+addButton("dark titan", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gitezgitgit/Dark-Titan/refs/heads/main/DARK%20TITAN%20SCRIPT%20SUPER%20RARE.txt"))()]])
+addButton("soul reaper", [[loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Soul-Reaper-55330"))()]])
+addButton("Goner", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gObl00x/My-Converts/refs/heads/main/Goner.lua"))()]])
+addButton("wally west", [[loadstring(game:HttpGet("https://pastefy.app/N1v3fGIS/raw"))()]])
+addButton("neptunian v", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/NepV"))()]])
+addButton("Comedic Chao", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/Comedy"))()]])
+addButton("Blind Reaper", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/BLINDREAPER"))()]])
+addButton("KJ tool", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/Five%20Seasons"))()]])
+addButton("reevenge", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/nicolasbarbosa323/sin-dragon/refs/heads/main/reevenge%20hands.txt"))()]])
+addButton("Rainbow King", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/Rainbow%20Banisher"))()]])
+addButton("spider bot", [[loadstring(game:HttpGet("https://pastebin.com/raw/XNVWznPH"))()]])
+addButton("Void Boss", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/come%20back"))()]])
+addButton("Grab Knife v1 tool", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/retpirato/Roblox-Scripts/refs/heads/master/Grab%20Knife%20V1.lua"))()]])
+addButton("Lua Hammer", [[loadstring(game:HttpGet("https://pastefy.app/Nh7FVtvC/raw"))()]])
+addButton("determination", [[loadstring(game:HttpGet("https://pastebin.com/raw/SMrFaqxL"))()]])
+addButton("Road Rogue", [[loadstring(game:HttpGet("https://pastefy.app/9gxSdisY/raw"))()]])
+addButton("kill Bot", [[loadstring(game:HttpGet("https://pastebin.com/raw/yraarJ7m"))()]])
+addButton("internal War", [[loadstring(game:HttpGet("https://pastebin.com/raw/u7DbahA4"))()]])
+addButton("guts", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/GUTS"))()]])
+addButton("Demon Banisher", [[loadstring(game:HttpGet("https://pastebin.com/raw/2dHmbWwa"))()]])
+addButton("angel Of Dark", [[loadstring(game:HttpGet("https://pastebin.com/raw/cxskwTEQ"))()]])
+
+-- TOGGLE BUTTON (vẫn giữ để ẩn/hiện nếu cần)
+local toggle = Instance.new("ImageButton")
+toggle.Size = UDim2.new(0, 80, 0, 80)
+toggle.Position = UDim2.new(0.5, 0, 0.5, 0)
+toggle.AnchorPoint = Vector2.new(0.5, 0.5)
+toggle.Image = "rbxassetid://99222845225092"
+toggle.BackgroundTransparency = 1
+toggle.Parent = gui
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(1,0)
+toggleCorner.Parent = toggle
+
+-- Hàm toggle (ẩn/hiện menu)
+local function toggleGui()
+    if main.Visible then
+        TweenService:Create(main, tweenMedium, {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(0,420,0,260)
+        }):Play()
+        task.delay(0.25, function() main.Visible = false end)
+    else
+        main.BackgroundTransparency = 1
+        main.Size = UDim2.new(0,420,0,260)
+        main.Visible = true
+        TweenService:Create(main, tweenMedium, {
+            BackgroundTransparency = 0,
+            Size = UDim2.new(0,500,0,300)
+        }):Play()
+    end
+end
+
+toggle.MouseButton1Click:Connect(toggleGui)
+
+-- Di chuyển toggle vào góc sau 3 giây
+task.delay(3, function()
+    TweenService:Create(toggle, TweenInfo.new(1.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0, 60, 0.5, 0)
+    }):Play()
+end)
+
+-- Orbit orbs (giữ nguyên)
+local mainImageId = "rbxassetid://99222845225092"
+local orbitRadius = 60
+local numOrbs = 8
+local speed = 1.5
+
+local orbFolder = Instance.new("Folder")
+orbFolder.Name = "OrbitOrbs"
+orbFolder.Parent = gui
+
+local orbs = {}
+for i = 1, numOrbs do
+    local orb = Instance.new("ImageLabel")
+    orb.Size = UDim2.new(0, 10, 0, 10)
+    orb.BackgroundTransparency = 1
+    orb.Image = mainImageId
+    orb.ImageTransparency = 0.4
+    orb.AnchorPoint = Vector2.new(0.5, 0.5)
+
+    local orbCorner = Instance.new("UICorner")  
+    orbCorner.CornerRadius = UDim.new(1, 0)  
+    orbCorner.Parent = orb  
+
+    orb.Parent = orbFolder  
+    table.insert(orbs, orb)
+end
+
+local timePassed = 0
+RunService.Heartbeat:Connect(function(deltaTime)
+    if not toggle.Visible then
+        for _, orb in ipairs(orbs) do orb.Visible = false end
+        return
+    end
+
+    for _, orb in ipairs(orbs) do orb.Visible = true end  
+
+    timePassed = timePassed + deltaTime * speed  
+    local centerPos = toggle.AbsolutePosition + toggle.AbsoluteSize / 2  
+
+    for i, orb in ipairs(orbs) do  
+        local angle = (timePassed + (i-1) * (2 * math.pi / numOrbs))  
+        local offsetX = math.cos(angle) * orbitRadius  
+        local offsetY = math.sin(angle) * orbitRadius  
+        orb.Position = UDim2.new(0, centerPos.X + offsetX - 5, 0, centerPos.Y + offsetY - 5)  
+    end
+end)
