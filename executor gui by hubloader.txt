@@ -46,49 +46,49 @@ local dragStartPos = nil
 local startGuiPos = nil
 
 local function updateDrag(input)
-    if not dragging then return end
-    local currentPos = input.Position
-    local delta = currentPos - dragStartPos
-    main.Position = UDim2.new(
-        startGuiPos.X.Scale,
-        startGuiPos.X.Offset + delta.X,
-        startGuiPos.Y.Scale,
-        startGuiPos.Y.Offset + delta.Y
-    )
+if not dragging then return end
+local currentPos = input.Position
+local delta = currentPos - dragStartPos
+main.Position = UDim2.new(
+startGuiPos.X.Scale,
+startGuiPos.X.Offset + delta.X,
+startGuiPos.Y.Scale,
+startGuiPos.Y.Offset + delta.Y
+)
 end
 
 top.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStartPos = input.Position
-        startGuiPos = main.Position
-        GuiService.SelectedObject = top
-        if UserInputService.MouseEnabled then
-            UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-        end
-        local conn
-        conn = input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-                GuiService.SelectedObject = nil
-                conn:Disconnect()
-            end
-        end)
-    end
+if gameProcessed then return end
+if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+dragging = true
+dragStartPos = input.Position
+startGuiPos = main.Position
+GuiService.SelectedObject = top
+if UserInputService.MouseEnabled then
+UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+end
+local conn
+conn = input.Changed:Connect(function()
+if input.UserInputState == Enum.UserInputState.End then
+dragging = false
+GuiService.SelectedObject = nil
+conn:Disconnect()
+end
+end)
+end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        updateDrag(input)
-    end
+if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+updateDrag(input)
+end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-        GuiService.SelectedObject = nil
-    end
+if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+dragging = false
+GuiService.SelectedObject = nil
+end
 end)
 
 -- SCRIPT BOX (TRÁI)
@@ -118,8 +118,8 @@ exec.TextColor3 = Color3.fromRGB(255, 255, 255)
 exec.Parent = main
 
 exec.MouseButton1Click:Connect(function()
-    local f = loadstring(box.Text)
-    if f then pcall(f) end
+local f = loadstring(box.Text)
+if f then pcall(f) end
 end)
 
 -- CLEAR
@@ -134,7 +134,7 @@ clear.TextColor3 = Color3.fromRGB(255, 255, 255)
 clear.Parent = main
 
 clear.MouseButton1Click:Connect(function()
-    box.Text = ""
+box.Text = ""
 end)
 
 -- SCROLL FRAME (PHẢI)
@@ -152,26 +152,33 @@ layout.Padding = UDim.new(0, 8)
 layout.Parent = scroll
 
 layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
 end)
 
 -- FUNCTION CREATE BUTTON
 local function addButton(name, scriptText)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -10, 0, 35)
-    btn.Text = name
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 14
-    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Parent = scroll
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(1, -10, 0, 35)
+btn.Text = name
+btn.Font = Enum.Font.SourceSansBold
+btn.TextSize = 14
+btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+btn.Parent = scroll
 
-    btn.MouseButton1Click:Connect(function()
-        box.Text = scriptText
-    end)
+btn.MouseButton1Click:Connect(function()  
+    box.Text = scriptText  
+end)
+
 end
 
 -- BUTTONS
+addButton("hồi sinh", [[
+	local plr = game.Players.LocalPlayer
+	if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+		plr.Character.Humanoid.Health = 0
+	end
+]])
 addButton("natuge", [[loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-natuge-FE-73244"))()]])
 addButton("gojo tool", [[loadstring(game:HttpGet("https://pastebin.com/raw/vzqZcTAU"))()]])
 addButton("Mystic tool", [[loadstring(game:HttpGet("https://pastefy.app/7R72UhO9/raw", true))()]])
@@ -186,6 +193,7 @@ addButton("wally west", [[loadstring(game:HttpGet("https://pastefy.app/N1v3fGIS/
 addButton("neptunian v", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/NepV"))()]])
 addButton("Comedic Chao", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/Comedy"))()]])
 addButton("Blind Reaper", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/BLINDREAPER"))()]])
+addButton("KJ tool", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/Five%20Seasons"))()]])
 
 local toggle = Instance.new("ImageButton")
 toggle.Size = UDim2.new(0, 90, 0, 90)
@@ -200,21 +208,21 @@ corner.CornerRadius = UDim.new(1, 0)
 corner.Parent = toggle
 
 task.delay(3, function()
-    TweenService:Create(
-        toggle,
-        TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {Position = UDim2.new(0, 50, 0.5, 0)}
-    ):Play()
+TweenService:Create(
+toggle,
+TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+{Position = UDim2.new(0, 50, 0.5, 0)}
+):Play()
 end)
 
 toggle.MouseButton1Click:Connect(function()
-    main.Visible = not main.Visible
+main.Visible = not main.Visible
 end)
 
-local mainImageId = "rbxassetid://99222845225092"  
-local orbitRadius = 60   
-local numOrbs = 8        
-local speed = 1.5        
+local mainImageId = "rbxassetid://99222845225092"
+local orbitRadius = 60
+local numOrbs = 8
+local speed = 1.5
 
 local orbFolder = Instance.new("Folder")
 orbFolder.Name = "OrbitOrbs"
@@ -222,37 +230,39 @@ orbFolder.Parent = gui
 
 local orbs = {}
 for i = 1, numOrbs do
-    local orb = Instance.new("ImageLabel")
-    orb.Size = UDim2.new(0, 10, 0, 10)
-    orb.BackgroundTransparency = 1
-    orb.Image = mainImageId
-    orb.ImageTransparency = 0.4
-    orb.AnchorPoint = Vector2.new(0.5, 0.5)
-    
-    local orbCorner = Instance.new("UICorner")
-    orbCorner.CornerRadius = UDim.new(1, 0)
-    orbCorner.Parent = orb
-    
-    orb.Parent = orbFolder
-    table.insert(orbs, orb)
+local orb = Instance.new("ImageLabel")
+orb.Size = UDim2.new(0, 10, 0, 10)
+orb.BackgroundTransparency = 1
+orb.Image = mainImageId
+orb.ImageTransparency = 0.4
+orb.AnchorPoint = Vector2.new(0.5, 0.5)
+
+local orbCorner = Instance.new("UICorner")  
+orbCorner.CornerRadius = UDim.new(1, 0)  
+orbCorner.Parent = orb  
+  
+orb.Parent = orbFolder  
+table.insert(orbs, orb)
+
 end
 
 local timePassed = 0
 RunService.Heartbeat:Connect(function(deltaTime)
-    if not toggle.Visible then 
-        for _, orb in ipairs(orbs) do orb.Visible = false end
-        return 
-    end
-    
-    for _, orb in ipairs(orbs) do orb.Visible = true end
-    
-    timePassed = timePassed + deltaTime * speed
-    local centerPos = toggle.AbsolutePosition + toggle.AbsoluteSize / 2
-    
-    for i, orb in ipairs(orbs) do
-        local angle = (timePassed + (i-1) * (2 * math.pi / numOrbs))
-        local offsetX = math.cos(angle) * orbitRadius
-        local offsetY = math.sin(angle) * orbitRadius
-        orb.Position = UDim2.new(0, centerPos.X + offsetX - 5, 0, centerPos.Y + offsetY - 5)
-    end
+if not toggle.Visible then
+for _, orb in ipairs(orbs) do orb.Visible = false end
+return
+end
+
+for _, orb in ipairs(orbs) do orb.Visible = true end  
+  
+timePassed = timePassed + deltaTime * speed  
+local centerPos = toggle.AbsolutePosition + toggle.AbsoluteSize / 2  
+  
+for i, orb in ipairs(orbs) do  
+    local angle = (timePassed + (i-1) * (2 * math.pi / numOrbs))  
+    local offsetX = math.cos(angle) * orbitRadius  
+    local offsetY = math.sin(angle) * orbitRadius  
+    orb.Position = UDim2.new(0, centerPos.X + offsetX - 5, 0, centerPos.Y + offsetY - 5)  
+end
+
 end)
