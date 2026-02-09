@@ -272,7 +272,6 @@ local toggleCorner = Instance.new("UICorner")
 toggleCorner.CornerRadius = UDim.new(1,0)
 toggleCorner.Parent = toggle
 
--- Hàm toggle (ẩn/hiện menu)
 local function toggleGui()
     if main.Visible then
         TweenService:Create(main, tweenMedium, {
