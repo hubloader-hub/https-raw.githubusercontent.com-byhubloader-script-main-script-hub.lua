@@ -173,11 +173,11 @@ end)
 end
 
 -- BUTTONS
-addButton("hồi sinh", [[
-	local plr = game.Players.LocalPlayer
-	if plr.Character and plr.Character:FindFirstChild("Humanoid") then
-		plr.Character.Humanoid.Health = 0
-	end
+addButton("hồi sinh", [[local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+hrp.CFrame = CFrame.new(-69.57, -221.99, 67.20)
 ]])
 addButton("natuge", [[loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-natuge-FE-73244"))()]])
 addButton("gojo tool", [[loadstring(game:HttpGet("https://pastebin.com/raw/vzqZcTAU"))()]])
