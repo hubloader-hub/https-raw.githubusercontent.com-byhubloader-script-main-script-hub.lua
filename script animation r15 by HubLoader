@@ -1,0 +1,239 @@
+-- Tạo GUI
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "IntroGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local textLabel = Instance.new("TextLabel")
+textLabel.Parent = screenGui
+textLabel.Size = UDim2.new(0, 0, 0, 50)
+textLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+textLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+textLabel.BackgroundTransparency = 1
+textLabel.Text = "script r15 animation by HubLoader 😉"
+textLabel.TextScaled = true
+textLabel.Font = Enum.Font.GothamBold
+textLabel.TextColor3 = Color3.fromRGB(100, 255, 255)
+textLabel.TextTransparency = 1
+
+-- Tween service
+local TweenService = game:GetService("TweenService")
+
+-- Animation hiện ra
+local appearTween = TweenService:Create(
+    textLabel,
+    TweenInfo.new(1.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+    {
+        Size = UDim2.new(0.6, 0, 0.08, 0),
+        TextTransparency = 0
+    }
+)
+
+-- Animation biến mất
+local disappearTween = TweenService:Create(
+    textLabel,
+    TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+    {
+        TextTransparency = 1,
+        Size = UDim2.new(0, 0, 0, 50)
+    }
+)
+
+-- Chạy animation
+appearTween:Play()
+appearTween.Completed:Wait()
+
+task.wait(5)
+
+disappearTween:Play()
+disappearTween.Completed:Wait()
+
+screenGui:Destroy()
+
+local player = game.Players.LocalPlayer
+local userInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+-- === Toggle These ===
+speed = true
+jump = true
+-- ====================
+
+local isUsingSetA = true
+
+-- Animation Sets
+local animSetA = {
+	idle = "rbxassetid://93077038833184",
+	walk = "rbxassetid://134010853417610"
+}
+
+local animSetB = {
+	idle = "rbxassetid://0",
+	walk = "rbxassetid://0"
+}
+
+local currentSet = animSetA
+local walkTrack, idleTrack
+local runningConnection
+local speedEnforcer
+local jumpEnforcer
+
+-- Apply animations and speed/jump if enabled
+local function applyAnimations(character)
+	local humanoid = character:WaitForChild("Humanoid")
+
+	-- Reset old
+	if walkTrack then walkTrack:Stop() end
+	if idleTrack then idleTrack:Stop() end
+	if runningConnection then runningConnection:Disconnect() end
+	if speedEnforcer then speedEnforcer:Disconnect() end
+	if jumpEnforcer then jumpEnforcer:Disconnect() end
+
+	-- Enforce WalkSpeed
+	if speed then
+		humanoid.WalkSpeed = 34
+		speedEnforcer = humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+			if humanoid.WalkSpeed ~= 34 then
+				humanoid.WalkSpeed = 34
+			end
+		end)
+	end
+
+	-- Enforce JumpPower + JumpHeight
+	if jump then
+		humanoid.UseJumpPower = true
+		humanoid.JumpPower = 75
+		humanoid.JumpHeight = 7.2
+
+		jumpEnforcer = RunService.Heartbeat:Connect(function()
+			if humanoid and humanoid.Parent then
+				if not humanoid.UseJumpPower then
+					humanoid.UseJumpPower = true
+				end
+				if humanoid.JumpPower ~= 75 then
+					humanoid.JumpPower = 75
+				end
+				if humanoid.JumpHeight ~= 7.2 then
+					humanoid.JumpHeight = 7.2
+				end
+			end
+		end)
+	end
+
+	-- Load animations
+	local walkAnim = Instance.new("Animation")
+	walkAnim.AnimationId = currentSet.walk
+	walkTrack = humanoid:LoadAnimation(walkAnim)
+	walkTrack.Looped = true
+
+	local idleAnim = Instance.new("Animation")
+	idleAnim.AnimationId = currentSet.idle
+	idleTrack = humanoid:LoadAnimation(idleAnim)
+	idleTrack.Looped = true
+
+	runningConnection = humanoid.Running:Connect(function(speedVal)
+		if speedVal > 0 then
+			idleTrack:Stop()
+			if not walkTrack.IsPlaying then walkTrack:Play() end
+		else
+			walkTrack:Stop()
+			if not idleTrack.IsPlaying then idleTrack:Play() end
+		end
+	end)
+
+	idleTrack:Play()
+end
+
+-- Tap toggle support
+local lastTapTime = 0
+local tapThreshold = 0.5
+local function handleTouch(input)
+	local tapped = input.Position
+	local currentTime = tick()
+	if currentTime - lastTapTime > tapThreshold then
+		lastTapTime = currentTime
+		local bufferArea = Rect.new(50, 50, 150, 150)
+		if bufferArea:Contains(tapped) then
+			isUsingSetA = not isUsingSetA
+			currentSet = isUsingSetA and animSetA or animSetB
+			if player.Character then
+				applyAnimations(player.Character)
+			end
+		end
+	end
+end
+
+-- GUI init
+local function initializeGUI()
+	if not player.PlayerGui:FindFirstChild("AnimToggleGui") then
+		local screenGui = Instance.new("ScreenGui")
+		screenGui.Name = "AnimToggleGui"
+		screenGui.ResetOnSpawn = false
+		screenGui.IgnoreGuiInset = true
+		screenGui.Parent = player:WaitForChild("PlayerGui")
+
+		local button = Instance.new("TextButton")
+		button.Size = UDim2.new(0, 120, 0, 40)
+		button.Position = UDim2.new(1, -130, 0.5, -20) -- original position
+		button.Text = "TOGGLE ANIM"
+		button.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		button.TextColor3 = Color3.fromRGB(255, 230, 180)
+		button.Font = Enum.Font.GothamBold
+		button.TextSize = 16
+		button.AutoButtonColor = false
+		button.Parent = screenGui
+
+		local uicorner = Instance.new("UICorner")
+		uicorner.CornerRadius = UDim.new(0, 4)
+		uicorner.Parent = button
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = Color3.fromRGB(120, 100, 60)
+		stroke.Thickness = 1.8
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		stroke.Parent = button
+
+		local shadow = Instance.new("TextLabel")
+		shadow.Size = button.Size
+		shadow.Position = UDim2.new(0, 1, 0, 1)
+		shadow.BackgroundTransparency = 1
+		shadow.Text = button.Text
+		shadow.TextColor3 = Color3.fromRGB(0, 0, 0)
+		shadow.Font = button.Font
+		shadow.TextSize = button.TextSize
+		shadow.ZIndex = button.ZIndex - 1
+		shadow.Parent = button
+
+		button.MouseEnter:Connect(function()
+			button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+		end)
+
+		button.MouseLeave:Connect(function()
+			button.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		end)
+
+		button.MouseButton1Click:Connect(function()
+			isUsingSetA = not isUsingSetA
+			currentSet = isUsingSetA and animSetA or animSetB
+			if player.Character then
+				applyAnimations(player.Character)
+			end
+		end)
+
+		userInputService.TouchStarted:Connect(handleTouch)
+	end
+end
+
+-- Main
+initializeGUI()
+if player.Character then
+	applyAnimations(player.Character)
+end
+
+player.CharacterAdded:Connect(function(character)
+	currentSet = isUsingSetA and animSetA or animSetB
+	applyAnimations(character)
+end)
