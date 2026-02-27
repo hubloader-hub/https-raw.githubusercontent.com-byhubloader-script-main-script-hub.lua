@@ -12,7 +12,7 @@ textLabel.Size = UDim2.new(0, 0, 0, 50)
 textLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
 textLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 textLabel.BackgroundTransparency = 1
-textLabel.Text = "script r15 animation by HubLoader 😉"
+textLabel.Text = "r15 animation by HubLoader 😉"
 textLabel.TextScaled = true
 textLabel.Font = Enum.Font.GothamBold
 textLabel.TextColor3 = Color3.fromRGB(100, 255, 255)
@@ -93,10 +93,10 @@ local function applyAnimations(character)
 
 	-- Enforce WalkSpeed
 	if speed then
-		humanoid.WalkSpeed = 27
+		humanoid.WalkSpeed = 23
 		speedEnforcer = humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-			if humanoid.WalkSpeed ~= 27 then
-				humanoid.WalkSpeed = 27
+			if humanoid.WalkSpeed ~= 23 then
+				humanoid.WalkSpeed = 23
 			end
 		end)
 	end
