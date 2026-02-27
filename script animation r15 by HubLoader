@@ -1,4 +1,3 @@
--- Tạo GUI
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
@@ -22,7 +21,7 @@ textLabel.TextTransparency = 1
 -- Tween service
 local TweenService = game:GetService("TweenService")
 
--- Animation hiện ra
+-- Animation
 local appearTween = TweenService:Create(
     textLabel,
     TweenInfo.new(1.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
@@ -32,7 +31,7 @@ local appearTween = TweenService:Create(
     }
 )
 
--- Animation biến mất
+-- Animation
 local disappearTween = TweenService:Create(
     textLabel,
     TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
@@ -42,7 +41,7 @@ local disappearTween = TweenService:Create(
     }
 )
 
--- Chạy animation
+-- run animation
 appearTween:Play()
 appearTween.Completed:Wait()
 
@@ -94,10 +93,10 @@ local function applyAnimations(character)
 
 	-- Enforce WalkSpeed
 	if speed then
-		humanoid.WalkSpeed = 34
+		humanoid.WalkSpeed = 27
 		speedEnforcer = humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-			if humanoid.WalkSpeed ~= 34 then
-				humanoid.WalkSpeed = 34
+			if humanoid.WalkSpeed ~= 27 then
+				humanoid.WalkSpeed = 27
 			end
 		end)
 	end
@@ -105,7 +104,7 @@ local function applyAnimations(character)
 	-- Enforce JumpPower + JumpHeight
 	if jump then
 		humanoid.UseJumpPower = true
-		humanoid.JumpPower = 75
+		humanoid.JumpPower = 40
 		humanoid.JumpHeight = 7.2
 
 		jumpEnforcer = RunService.Heartbeat:Connect(function()
@@ -113,8 +112,8 @@ local function applyAnimations(character)
 				if not humanoid.UseJumpPower then
 					humanoid.UseJumpPower = true
 				end
-				if humanoid.JumpPower ~= 75 then
-					humanoid.JumpPower = 75
+				if humanoid.JumpPower ~= 40 then
+					humanoid.JumpPower = 40
 				end
 				if humanoid.JumpHeight ~= 7.2 then
 					humanoid.JumpHeight = 7.2
