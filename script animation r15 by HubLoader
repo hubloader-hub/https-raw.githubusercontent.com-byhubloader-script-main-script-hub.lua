@@ -93,10 +93,10 @@ local function applyAnimations(character)
 
 	-- Enforce WalkSpeed
 	if speed then
-		humanoid.WalkSpeed = 23
+		humanoid.WalkSpeed = 20
 		speedEnforcer = humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-			if humanoid.WalkSpeed ~= 23 then
-				humanoid.WalkSpeed = 23
+			if humanoid.WalkSpeed ~= 20 then
+				humanoid.WalkSpeed = 20
 			end
 		end)
 	end
