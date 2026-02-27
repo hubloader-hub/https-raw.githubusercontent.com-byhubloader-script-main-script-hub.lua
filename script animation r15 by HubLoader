@@ -93,10 +93,10 @@ local function applyAnimations(character)
 
 	-- Enforce WalkSpeed
 	if speed then
-		humanoid.WalkSpeed = 20
+		humanoid.WalkSpeed = 19
 		speedEnforcer = humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-			if humanoid.WalkSpeed ~= 20 then
-				humanoid.WalkSpeed = 20
+			if humanoid.WalkSpeed ~= 19 then
+				humanoid.WalkSpeed = 19
 			end
 		end)
 	end
@@ -104,7 +104,7 @@ local function applyAnimations(character)
 	-- Enforce JumpPower + JumpHeight
 	if jump then
 		humanoid.UseJumpPower = true
-		humanoid.JumpPower = 40
+		humanoid.JumpPower = 50
 		humanoid.JumpHeight = 7.2
 
 		jumpEnforcer = RunService.Heartbeat:Connect(function()
@@ -112,8 +112,8 @@ local function applyAnimations(character)
 				if not humanoid.UseJumpPower then
 					humanoid.UseJumpPower = true
 				end
-				if humanoid.JumpPower ~= 40 then
-					humanoid.JumpPower = 40
+				if humanoid.JumpPower ~= 50 then
+					humanoid.JumpPower = 50
 				end
 				if humanoid.JumpHeight ~= 7.2 then
 					humanoid.JumpHeight = 7.2
