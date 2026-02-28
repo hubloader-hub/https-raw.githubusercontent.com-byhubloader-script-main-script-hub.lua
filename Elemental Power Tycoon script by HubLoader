@@ -192,7 +192,7 @@ end)
 end) ]]
 
 local Window = Rayfield:CreateWindow({
-	Name = "Tycoon nguyên tố sức mạnh",
+	Name = "Tycoon nguyên tố sức mạnh by HubLoader",
 	LoadingTitle = "Rayfield Interface Suite",
 	LoadingSubtitle = "by HubLoader",
 	ConfigurationSaving = {
