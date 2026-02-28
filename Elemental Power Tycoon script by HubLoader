@@ -1,0 +1,362 @@
+local a333 = Instance.new("Message", workspace)
+a333.Text = "script đang Loading hãy đợi"
+task.spawn(function()
+	wait(5)
+	a333:Destroy()
+end)
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Esp = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/x114/RobloxScripts/main/OpenSourceEsp"))()
+Rayfield:Notify({
+	Title = "Loading thành công",
+	Content = "Elemental Power Tycoon script :)",
+	Duration = 6.5,
+	Image = 4483362458,
+	Actions = { -- Notification Buttons
+		Ignore = {
+			Name = "Okay",
+			Callback = function()
+				print("k!2")
+			end
+		},
+	},
+})
+-- // Services
+local Players = game:GetService("Players")
+local RunService = game:FindService("RunService")
+local VirtualUser = game:GetService("VirtualUser")
+-- // Variables
+local Player = Players.LocalPlayer
+local Char = Player.Character or Player.CharacterAdded:Wait()
+local HRP:Part = Char:WaitForChild("HumanoidRootPart")
+local Humanoid = Char:FindFirstChildOfClass("Humanoid")
+local AntiAFK = false
+local ControlPoint:Model = workspace.Control_Point
+local ControlPointPart:Part = ControlPoint.Point
+local AutoFarm = {
+	
+	StealDollars = false,
+	AutoCollect = false,
+	AutoBuild = false,
+	AutoRebith = false, -- This not Used Yet, I can't make it work :(
+	AutoHillRemoval = false
+	
+}
+local Trolling = {
+	
+	Fling = false,
+	TargetPlayer = nil,
+	Targeting = false
+	
+}
+local Combat = {
+	
+	ESP = false,
+	EquipAll = false
+	
+}
+local Tycoon = workspace.Tycoons:FindFirstChild(Player.Name)
+if not Tycoon then
+	Rayfield:Notify({
+		Title = "Error",
+		Content = "Collect Your Tycoon!",
+		Duration = 6.5,
+		Image = 11745872910,
+		Actions = { -- Notification Buttons
+			Ignore = {
+				Name = "Okay",
+				Callback = function()
+					print("k!")
+				end
+			},
+		},
+	})
+end
+repeat
+	task.wait(1) -- To prevent roblox from freezing :0
+	Tycoon = workspace.Tycoons:FindFirstChild(Player.Name)
+until Tycoon
+local PlayerBalance:IntValue = Player.leaderstats.Money
+
+-- // Scripts
+
+local OuxiHubOP = "https://pastebin.com/raw/Qt6Qni6d"
+
+-- // Functions
+
+Player.CharacterAdded:Connect(function(NewChar)
+	Char = NewChar
+	HRP = Char:WaitForChild("HumanoidRootPart")
+	Humanoid = Char:FindFirstChildOfClass("Humanoid")
+end)
+
+local function GetPlayerFromDisplayOrUserName(PlayerName:string)
+	local finded = false
+	for _, p in pairs(Players:GetPlayers()) do
+		if p.Name:lower() == PlayerName:lower() or p.DisplayName:lower() == PlayerName:lower() then
+			finded = true
+			return p
+		end
+	end
+	if not finded then
+		return nil
+	end
+end
+
+local function FlingRequest()
+	local Target = Trolling.TargetPlayer
+	local Thrust = Instance.new('BodyThrust', HRP)
+	Thrust.Force = Vector3.new(9999,9999,9999)
+	Thrust.Name = "YeetForce"
+
+	if Trolling.Fling then
+		repeat
+			HRP.CFrame = Target.Character.HumanoidRootPart.CFrame
+			Thrust.Location = Target.Character.HumanoidRootPart.Position
+			RunService.Heartbeat:wait()
+		until not Trolling.Fling
+	else
+		Thrust:Destroy()
+	end
+end
+
+local function TargetingRequest()
+	local FollowWeld = Instance.new("WeldConstraint", Char.HumanoidRootPart)
+	if Trolling.TargetPlayer then
+		HRP.CFrame = Trolling.TargetPlayer.Character.HumanoidRootPart.CFrame
+		HRP.CFrame = CFrame.new(HRP.Position + Vector3.new(0,5,0), Vector3.new(0,-90,0))
+		FollowWeld.Part0 = Trolling.TargetPlayer.Character.HumanoidRootPart
+		FollowWeld.Part1 = HRP
+		Player.CharacterAdded:Connect(function(Char)
+			FollowWeld = Instance.new("WeldConstraint", HRP)
+			Char.HumanoidRootPart.CFrame = Trolling.TargetPlayer.Character.HumanoidRootPart.CFrame
+			Char.HumanoidRootPart.CFrame = CFrame.new(Char.HumanoidRootPart.Position + Vector3.new(0,5,0), Vector3.new(0,-90,0))
+			FollowWeld.Part0 = Trolling.TargetPlayer.Character.HumanoidRootPart
+			FollowWeld.Part1 = Char.HumanoidRootPart
+		end)
+	else
+		FollowWeld:Destroy()
+	end
+end
+
+task.spawn(function()
+	while task.wait(1) do
+		if AutoFarm.AutoCollect then
+			Char:PivotTo(Tycoon.Auxiliary.Collector.Collect.CFrame)
+		end
+		
+		if AutoFarm.AutoHillRemoval and ControlPoint:GetAttribute("Owner") ~= Player.Name then
+			local StartCFrame = HRP.CFrame
+			repeat
+				task.wait() -- To prevent roblox from freezing :0
+				Char:PivotTo(ControlPointPart.CFrame)
+			until ControlPoint:GetAttribute("Owner") == Player.Name
+			Char:PivotTo(StartCFrame)
+		end
+		
+		if AutoFarm.AutoBuild then
+			for _, b in pairs(Tycoon.Buttons:GetChildren()) do
+				local ButtonBase:Part = b.Button
+				
+				if ButtonBase.Color == Color3.fromRGB(0,127,0) then
+					Char:PivotTo(ButtonBase.CFrame)
+				end
+			end
+		end
+	end
+end)
+
+workspace.ChildAdded:Connect(function(O)
+	if O.Name == "Dollar" and AutoFarm.StealDollars then
+		for i, o2 in pairs(workspace:GetChildren()) do
+			if o2.Name == "Dollar" then
+				task.wait()
+				local StartCFrame = HRP.CFrame
+					Char:PivotTo(o2.CFrame)
+					task.wait()
+					Char:PivotTo(StartCFrame)
+			end
+		end
+	end
+end)
+
+Player.Idled:Connect(function()
+	if AntiAFK then
+		VirtualUser:ClickButton2(Vector2.new())
+	end
+end)
+
+--[[ Tycoon.Auxiliary.ChildAdded:Connect(function(o)
+	if o.Name == "Rebirth" and AutoFarm.AutoRebith then
+		game.ReplicatedStorage:WaitForChild("Remotes").RequestRebirth:FireServer()
+	end
+end) ]]
+
+local Window = Rayfield:CreateWindow({
+	Name = "Tycoon nguyên tố sức mạnh",
+	LoadingTitle = "Rayfield Interface Suite",
+	LoadingSubtitle = "by HubLoader",
+	ConfigurationSaving = {
+		Enabled = true,
+		FolderName = "Star Yield", -- Create a custom folder for your hub/game
+		FileName = "StarYield_Elemental Powers Tycoon__config"
+	},
+	Discord = {
+		Enabled = true,
+		Invite = "ZC2", -- The Discord invite code, do not include discord.gg/. E.g. di.gg would be ABCD
+		RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+	},
+	KeySystem = false, -- Set this to true to use our key system
+	KeySettings = {
+		Title = "Untitled",
+		Subtitle = "Key System",
+		Note = "No method of obtaining the key is provided",
+		FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+		SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+		GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+		Key = {""} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+	}
+})
+
+local Tab = Window:CreateTab("cày", 107364918194164)
+local Tabe = Window:CreateTab("chiến đấu", 80964454894155)
+local Tab2 = Window:CreateTab("Troll việt nam", 108044792581952)
+
+local Button = Tab:CreateButton({
+	Name = "trở về nhà",
+	Callback = function()
+		local Tycoon = workspace:WaitForChild("Tycoons"):FindFirstChild(Player.Name)
+		if Tycoon then
+			Char:PivotTo(Tycoon.Auxiliary.Spawn:FindFirstChildOfClass("SpawnLocation").CFrame)
+		end
+	end,
+})  
+
+local Toggle = Tab:CreateToggle({
+	Name = "cày tiền",
+	CurrentValue = false,
+	Flag = "Toggle2", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback = function(Value)
+		AutoFarm.AutoCollect = Value
+	end,
+})
+local Toggle = Tab:CreateToggle({
+	Name = "xây Tycoon",
+	CurrentValue = false,
+	Flag = "Toggle3", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback = function(Value)
+		AutoFarm.AutoBuild = Value
+	end,
+})
+local Toggle = Tab:CreateToggle({
+	Name = "làm vua của điểm kiểm soát",
+	CurrentValue = false,
+	Flag = "Toggle?1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback = function(Value)
+		AutoFarm.AutoHillRemoval = Value
+	end,
+})
+
+local Toggle = Tab2:CreateToggle({
+	Name = "xì hơi :)",
+	CurrentValue = false,
+	Flag = "Toggle4", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback = function(Value)
+		if Value then
+			if Trolling.TargetPlayer then
+				Trolling.Fling = true
+				FlingRequest()
+			else
+				Rayfield:Notify({
+					Title = "Error",
+					Content = "Set Target Player First!",
+					Duration = 4,
+					Image = 1745872910,
+					Actions = { -- Notification Buttons
+						Ignore = {
+							Name = "Okay",
+							Callback = function()
+								print("k!5")
+							end
+						},
+					},
+				})
+			end
+		else
+			Trolling.Fling = false
+			FlingRequest()
+		end
+	end,
+})
+
+local Toggle = Tabe:CreateToggle({
+	Name = "nhắm người chơi",
+	CurrentValue = false,
+	Flag = "Toggle7", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback = function(Value)
+		if Value then
+			if Trolling.TargetPlayer then
+				Trolling.Targeting = true
+				TargetingRequest()
+			else
+				Rayfield:Notify({
+					Title = "Error",
+					Content = "Set Target Player First!",
+					Duration = 4,
+					Image = 1745872910,
+					Actions = { -- Notification Buttons
+						Ignore = {
+							Name = "Okay",
+							Callback = function()
+								print("k!5")
+							end
+						},
+					},
+				})
+			end
+		else
+			Trolling.Targeting = false
+			TargetingRequest()
+		end
+	end,
+})
+
+local Toggle = Tabe:CreateToggle({
+	Name = "Anti AFK",
+	CurrentValue = false,
+	Flag = "Toggle6", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback = function(Value)
+		AntiAFK = Value
+	end,
+})
+
+
+local Button = Tabe:CreateButton({
+	Name = "Esp",
+	Callback = function()
+		Esp.Box = false
+		Esp.BoxColor = Color3.fromRGB(255,255,255)
+		Esp.BoxOutline = true
+		Esp.BoxOutlineColor = Color3.fromRGB(0,0,0)
+		Esp.HealthBar = true
+		Esp.HealthBarSide = "Left"
+		Esp.Names = true
+		Esp.NamesColor = Color3.fromRGB(255,255,255)
+		Esp.NamesOutline = true
+		Esp.NamesFont = 2
+		Esp.NamesSize = 13
+	end,
+})  
+Rayfield:Notify({
+	Title = "Loaded!",
+	Content = "Star Yield",
+	Duration = 4,
+	Image = 4483362458,
+	Actions = { -- Notification Buttons
+		Ignore = {
+			Name = "Okay",
+			Callback = function()
+				print("k!2")
+			end
+		},
+	},
+})
