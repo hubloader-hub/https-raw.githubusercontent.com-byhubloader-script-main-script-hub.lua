@@ -1,362 +1,145 @@
-local a333 = Instance.new("Message", workspace)
-a333.Text = "script đang Loading hãy đợi"
-task.spawn(function()
-	wait(5)
-	a333:Destroy()
-end)
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-local Esp = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/x114/RobloxScripts/main/OpenSourceEsp"))()
-Rayfield:Notify({
-	Title = "Loading thành công",
-	Content = "Elemental Power Tycoon script :)",
-	Duration = 6.5,
-	Image = 4483362458,
-	Actions = { -- Notification Buttons
-		Ignore = {
-			Name = "Okay",
-			Callback = function()
-				print("k!2")
-			end
-		},
-	},
-})
--- // Services
-local Players = game:GetService("Players")
-local RunService = game:FindService("RunService")
-local VirtualUser = game:GetService("VirtualUser")
--- // Variables
-local Player = Players.LocalPlayer
-local Char = Player.Character or Player.CharacterAdded:Wait()
-local HRP:Part = Char:WaitForChild("HumanoidRootPart")
-local Humanoid = Char:FindFirstChildOfClass("Humanoid")
-local AntiAFK = false
-local ControlPoint:Model = workspace.Control_Point
-local ControlPointPart:Part = ControlPoint.Point
-local AutoFarm = {
-	
-	StealDollars = false,
-	AutoCollect = false,
-	AutoBuild = false,
-	AutoRebith = false, -- This not Used Yet, I can't make it work :(
-	AutoHillRemoval = false
-	
-}
-local Trolling = {
-	
-	Fling = false,
-	TargetPlayer = nil,
-	Targeting = false
-	
-}
-local Combat = {
-	
-	ESP = false,
-	EquipAll = false
-	
-}
-local Tycoon = workspace.Tycoons:FindFirstChild(Player.Name)
-if not Tycoon then
-	Rayfield:Notify({
-		Title = "Error",
-		Content = "Collect Your Tycoon!",
-		Duration = 6.5,
-		Image = 11745872910,
-		Actions = { -- Notification Buttons
-			Ignore = {
-				Name = "Okay",
-				Callback = function()
-					print("k!")
-				end
-			},
-		},
-	})
-end
-repeat
-	task.wait(1) -- To prevent roblox from freezing :0
-	Tycoon = workspace.Tycoons:FindFirstChild(Player.Name)
-until Tycoon
-local PlayerBalance:IntValue = Player.leaderstats.Money
-
--- // Scripts
-
-local OuxiHubOP = "https://pastebin.com/raw/Qt6Qni6d"
-
--- // Functions
-
-Player.CharacterAdded:Connect(function(NewChar)
-	Char = NewChar
-	HRP = Char:WaitForChild("HumanoidRootPart")
-	Humanoid = Char:FindFirstChildOfClass("Humanoid")
-end)
-
-local function GetPlayerFromDisplayOrUserName(PlayerName:string)
-	local finded = false
-	for _, p in pairs(Players:GetPlayers()) do
-		if p.Name:lower() == PlayerName:lower() or p.DisplayName:lower() == PlayerName:lower() then
-			finded = true
-			return p
-		end
-	end
-	if not finded then
-		return nil
-	end
-end
-
-local function FlingRequest()
-	local Target = Trolling.TargetPlayer
-	local Thrust = Instance.new('BodyThrust', HRP)
-	Thrust.Force = Vector3.new(9999,9999,9999)
-	Thrust.Name = "YeetForce"
-
-	if Trolling.Fling then
-		repeat
-			HRP.CFrame = Target.Character.HumanoidRootPart.CFrame
-			Thrust.Location = Target.Character.HumanoidRootPart.Position
-			RunService.Heartbeat:wait()
-		until not Trolling.Fling
-	else
-		Thrust:Destroy()
-	end
-end
-
-local function TargetingRequest()
-	local FollowWeld = Instance.new("WeldConstraint", Char.HumanoidRootPart)
-	if Trolling.TargetPlayer then
-		HRP.CFrame = Trolling.TargetPlayer.Character.HumanoidRootPart.CFrame
-		HRP.CFrame = CFrame.new(HRP.Position + Vector3.new(0,5,0), Vector3.new(0,-90,0))
-		FollowWeld.Part0 = Trolling.TargetPlayer.Character.HumanoidRootPart
-		FollowWeld.Part1 = HRP
-		Player.CharacterAdded:Connect(function(Char)
-			FollowWeld = Instance.new("WeldConstraint", HRP)
-			Char.HumanoidRootPart.CFrame = Trolling.TargetPlayer.Character.HumanoidRootPart.CFrame
-			Char.HumanoidRootPart.CFrame = CFrame.new(Char.HumanoidRootPart.Position + Vector3.new(0,5,0), Vector3.new(0,-90,0))
-			FollowWeld.Part0 = Trolling.TargetPlayer.Character.HumanoidRootPart
-			FollowWeld.Part1 = Char.HumanoidRootPart
-		end)
-	else
-		FollowWeld:Destroy()
-	end
-end
-
-task.spawn(function()
-	while task.wait(1) do
-		if AutoFarm.AutoCollect then
-			Char:PivotTo(Tycoon.Auxiliary.Collector.Collect.CFrame)
-		end
-		
-		if AutoFarm.AutoHillRemoval and ControlPoint:GetAttribute("Owner") ~= Player.Name then
-			local StartCFrame = HRP.CFrame
-			repeat
-				task.wait() -- To prevent roblox from freezing :0
-				Char:PivotTo(ControlPointPart.CFrame)
-			until ControlPoint:GetAttribute("Owner") == Player.Name
-			Char:PivotTo(StartCFrame)
-		end
-		
-		if AutoFarm.AutoBuild then
-			for _, b in pairs(Tycoon.Buttons:GetChildren()) do
-				local ButtonBase:Part = b.Button
-				
-				if ButtonBase.Color == Color3.fromRGB(0,127,0) then
-					Char:PivotTo(ButtonBase.CFrame)
-				end
-			end
-		end
-	end
-end)
-
-workspace.ChildAdded:Connect(function(O)
-	if O.Name == "Dollar" and AutoFarm.StealDollars then
-		for i, o2 in pairs(workspace:GetChildren()) do
-			if o2.Name == "Dollar" then
-				task.wait()
-				local StartCFrame = HRP.CFrame
-					Char:PivotTo(o2.CFrame)
-					task.wait()
-					Char:PivotTo(StartCFrame)
-			end
-		end
-	end
-end)
-
-Player.Idled:Connect(function()
-	if AntiAFK then
-		VirtualUser:ClickButton2(Vector2.new())
-	end
-end)
-
---[[ Tycoon.Auxiliary.ChildAdded:Connect(function(o)
-	if o.Name == "Rebirth" and AutoFarm.AutoRebith then
-		game.ReplicatedStorage:WaitForChild("Remotes").RequestRebirth:FireServer()
-	end
-end) ]]
+-- Ai ăn cắp và bị gay
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-	Name = "Tycoon nguyên tố sức mạnh by HubLoader",
-	LoadingTitle = "Rayfield Interface Suite",
-	LoadingSubtitle = "by HubLoader",
-	ConfigurationSaving = {
-		Enabled = true,
-		FolderName = "Star Yield", -- Create a custom folder for your hub/game
-		FileName = "StarYield_Elemental Powers Tycoon__config"
-	},
-	Discord = {
-		Enabled = true,
-		Invite = "ZC2", -- The Discord invite code, do not include discord.gg/. E.g. di.gg would be ABCD
-		RememberJoins = true -- Set this to false to make them join the discord every time they load it up
-	},
-	KeySystem = false, -- Set this to true to use our key system
-	KeySettings = {
-		Title = "Untitled",
-		Subtitle = "Key System",
-		Note = "No method of obtaining the key is provided",
-		FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-		SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-		GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-		Key = {""} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
-	}
+    Name = "element power by HubLoader 2.0",
+    LoadingTitle = "element power script",
+    LoadingSubtitle = "New Update!",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "HubLoaderConfig",
+        FileName = "MainHub"
+    },
+    KeySystem = false,
 })
 
-local Tab = Window:CreateTab("cày", 107364918194164)
-local Tabe = Window:CreateTab("chiến đấu", 80964454894155)
-local Tab2 = Window:CreateTab("Troll việt nam", 108044792581952)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local RS = game:GetService("ReplicatedStorage")
+-- Using a safer check for RemoteEvent
+local Remote = RS:WaitForChild("RemoteEvent", 10) 
+local lp = Players.LocalPlayer
 
-local Button = Tab:CreateButton({
-	Name = "trở về nhà",
-	Callback = function()
-		local Tycoon = workspace:WaitForChild("Tycoons"):FindFirstChild(Player.Name)
-		if Tycoon then
-			Char:PivotTo(Tycoon.Auxiliary.Spawn:FindFirstChildOfClass("SpawnLocation").CFrame)
-		end
-	end,
-})  
+--// Safe Humanoid Getter
+local function getHumanoid()
+    local char = lp.Character or lp.CharacterAdded:Wait()
+    return char:WaitForChild("Humanoid")
+end
 
-local Toggle = Tab:CreateToggle({
-	Name = "cày tiền",
-	CurrentValue = false,
-	Flag = "Toggle2", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	Callback = function(Value)
-		AutoFarm.AutoCollect = Value
-	end,
-})
-local Toggle = Tab:CreateToggle({
-	Name = "xây Tycoon",
-	CurrentValue = false,
-	Flag = "Toggle3", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	Callback = function(Value)
-		AutoFarm.AutoBuild = Value
-	end,
-})
-local Toggle = Tab:CreateToggle({
-	Name = "làm vua của điểm kiểm soát",
-	CurrentValue = false,
-	Flag = "Toggle?1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	Callback = function(Value)
-		AutoFarm.AutoHillRemoval = Value
-	end,
-})
+-- ================= POWERS TAB =================
+local PowersTab = Window:CreateTab("Powers", 4483362458)
 
-local Toggle = Tab2:CreateToggle({
-	Name = "xì hơi :)",
-	CurrentValue = false,
-	Flag = "Toggle4", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	Callback = function(Value)
-		if Value then
-			if Trolling.TargetPlayer then
-				Trolling.Fling = true
-				FlingRequest()
-			else
-				Rayfield:Notify({
-					Title = "Error",
-					Content = "Set Target Player First!",
-					Duration = 4,
-					Image = 1745872910,
-					Actions = { -- Notification Buttons
-						Ignore = {
-							Name = "Okay",
-							Callback = function()
-								print("k!5")
-							end
-						},
-					},
-				})
-			end
-		else
-			Trolling.Fling = false
-			FlingRequest()
-		end
-	end,
-})
+local powers = {
+    ["Water"] = {"Jellyfish", "Bubbles", "Aqua Trident", "Big Tsunami", "Water Beam", "Bubble Dash"},
+    ["Lava"] = {"Lava Katana","Lava Ball","Magma Fists","Lava Dash","Volcano Sentry","Magma Spikes","Nibiru"},
+    ["Bone"] = {"Bone Scythe","Blaster","Bones Barrage","Flying Bone","Bone Surge","Twin Blasters","Judgement Blast"},
+    ["Darkness"] = {"Shadow Sword","Unseen Hands","Unseen Barrage","Dark Duo","Abyss","Dark Hold","Dark Arc"},
+    ["Light"] = {"Light Saber","Light Ball","Light Orbs","Blinding Light","Shooting Star","Light Speed","Light Beam"},
+    ["Nature"] = {"Christmas Tree Sword","Plantoid","Spore Bombs","Nature's Blessing","Nuclear Spore","Pine Burst","Nature's Wrath"},
+    ["Ice"] = {"Frost Staff","Frost Fire Ball","Ice Disk","Frost Fire Bomb","Snow Ball","Ultracold Aura","Ice Spikes"},
+    ["Thunder"] = {"Thunder Staff","Bolt","Barrage","Discharge","Flying Nimbus","Lightning Strike","Storm"},
+    ["Earth"] = {"Tectonic Hammer","Stone Throw","Rocks Barrage","Large Boulder","Burrow","Stone Henge","Earth Spikes"},
+    ["Fire"] = {"Fire Sword","Fire Ball","Fire Fly","Fire Bomb","Comet","Combust","Fire Shower"},
+    ["Technology"] = {"Hyper Sword","Photon Blast","Twin-Photon Blast","Tesla Turret","Orbital","Tesseract","Hyper Slash"},
+    ["Gravity"] = {"Gravity Katana","Heavy Infliction","Tectonic Barrage","Gravity Orb","Tectonic Burst","Zero Gravity","Gravity Globe"},
+    ["Time"] = {"Time Scepter","Temporal Gate","Warp Barrage","Tempo Beam","Time Trap","Warp Bomb","Grand Clock"},
+    ["Crystal"] = {"Crystal Cleaver","Crystal Mine","Energy Crash","Energy Crown","Crystal Eruption","Energy Crystal","Crystal Surge"},
+    ["Venom"] = {"Venom Blade","Poison Bullet","Acid Rain","Venom Stream","Hardened Venom","Poison Demon","Bubbling Venom"},
+    ["Devil"] = {"Devil Sword","Evil Bullet","Fangs Barrage","Evil Flash","Demon Orb","Demon Lock","Dark Tsunami"},
+    ["Space"] = {"Space Gun","Blackhole Orb","Moon Splitter","Asteroid Belt","Meteor Jam","Cosmic Remote","Space Saucer"},
+    ["Super Sonic"] = {"Sonic Blaster","Sonic Barrage","Sonic Twister","Rebound Blast","Rebound Teleport","Sonic Boom","Super Sonic Wave"},
+}
 
-local Toggle = Tabe:CreateToggle({
-	Name = "nhắm người chơi",
-	CurrentValue = false,
-	Flag = "Toggle7", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	Callback = function(Value)
-		if Value then
-			if Trolling.TargetPlayer then
-				Trolling.Targeting = true
-				TargetingRequest()
-			else
-				Rayfield:Notify({
-					Title = "Error",
-					Content = "Set Target Player First!",
-					Duration = 4,
-					Image = 1745872910,
-					Actions = { -- Notification Buttons
-						Ignore = {
-							Name = "Okay",
-							Callback = function()
-								print("k!5")
-							end
-						},
-					},
-				})
-			end
-		else
-			Trolling.Targeting = false
-			TargetingRequest()
-		end
-	end,
+for category, list in pairs(powers) do
+    PowersTab:CreateSection(category)
+    for _, skill in ipairs(list) do
+        PowersTab:CreateButton({
+            Name = skill,
+            Callback = function()
+                if Remote then
+                    Remote:FireServer("equip_mystery_spell", skill)
+                end
+            end
+        })
+    end
+end
+
+-- ================= REBIRTH TAB =================
+local RebirthTab = Window:CreateTab("Rebirth & Special", 4483362458)
+
+local rebirthSkills = {
+    "Draedon's Tech", "Elysian Beam", "Bubble Flail", 
+    "Halloween Sword", "Poison Serpent", "Dark Flames", "Yoru", 
+    "Plasma Orbs", "Red Saucer", "Undead Staff", "Cruel Sun", "Cold Slap", "Time Slap",
+}
+
+RebirthTab:CreateSection("Special / Rebirth Skills")
+for _, skill in ipairs(rebirthSkills) do
+    RebirthTab:CreateButton({
+        Name = skill,
+        Callback = function()
+            if Remote then
+                Remote:FireServer("equip_mystery_spell", skill)
+                Rayfield:Notify({
+                    Title = "script",
+                    Content = "Equipped: " .. skill,
+                    Duration = 2
+                })
+            end
+        end
+    })
+end
+
+-- ================= PLAYER TAB =================
+local PlayerTab = Window:CreateTab("Player", 4483345998)
+local currentSpeed = 16
+local currentJump = 50
+local lockSpeed = false
+local lockJump = false
+
+PlayerTab:CreateSlider({
+    Name = "WalkSpeed", Range = {16, 500}, Increment = 1, Suffix = " Speed", CurrentValue = 16,
+    Callback = function(Value)
+        currentSpeed = Value
+        local hum = getHumanoid()
+        if hum then hum.WalkSpeed = Value end
+    end,
 })
 
-local Toggle = Tabe:CreateToggle({
-	Name = "Anti AFK",
-	CurrentValue = false,
-	Flag = "Toggle6", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	Callback = function(Value)
-		AntiAFK = Value
-	end,
+PlayerTab:CreateSlider({
+    Name = "JumpPower", Range = {50, 500}, Increment = 1, Suffix = " Power", CurrentValue = 50,
+    Callback = function(Value)
+        currentJump = Value
+        local hum = getHumanoid()
+        if hum then hum.JumpPower = Value end
+    end,
 })
 
+PlayerTab:CreateToggle({
+    Name = "Lock WalkSpeed", CurrentValue = false,
+    Callback = function(Value) lockSpeed = Value end,
+})
 
-local Button = Tabe:CreateButton({
-	Name = "Esp",
-	Callback = function()
-		Esp.Box = false
-		Esp.BoxColor = Color3.fromRGB(255,255,255)
-		Esp.BoxOutline = true
-		Esp.BoxOutlineColor = Color3.fromRGB(0,0,0)
-		Esp.HealthBar = true
-		Esp.HealthBarSide = "Left"
-		Esp.Names = true
-		Esp.NamesColor = Color3.fromRGB(255,255,255)
-		Esp.NamesOutline = true
-		Esp.NamesFont = 2
-		Esp.NamesSize = 13
-	end,
-})  
+PlayerTab:CreateToggle({
+    Name = "Lock JumpPower", CurrentValue = false,
+    Callback = function(Value) lockJump = Value end,
+})
+
+-- Handle speed/jump locking
+RunService.Stepped:Connect(function()
+    local char = lp.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            if lockSpeed then hum.WalkSpeed = currentSpeed end
+            if lockJump then hum.JumpPower = currentJump end
+        end
+    end
+end)
+
+Rayfield:LoadConfiguration()
 Rayfield:Notify({
-	Title = "Loaded!",
-	Content = "Star Yield",
-	Duration = 4,
-	Image = 4483362458,
-	Actions = { -- Notification Buttons
-		Ignore = {
-			Name = "Okay",
-			Callback = function()
-				print("k!2")
-			end
-		},
-	},
+    Title = "script Updated",
+    Content = "Version 2.0 Ready!",
+    Duration = 5
 })
