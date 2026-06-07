@@ -1,8 +1,8 @@
--- Ai ăn cắp và bị gay
+-- Ai ăn cắp là bị gay
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "element power by HubLoader 2.0",
+    Name = "HubLoader | element power | 4.5",
     LoadingTitle = "element power script",
     LoadingSubtitle = "New Update!",
     ConfigurationSaving = {
@@ -16,9 +16,36 @@ local Window = Rayfield:CreateWindow({
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local RS = game:GetService("ReplicatedStorage")
--- Using a safer check for RemoteEvent
 local Remote = RS:WaitForChild("RemoteEvent", 10) 
 local lp = Players.LocalPlayer
+
+-- // Khởi tạo các Table thiếu để tránh lỗi nil
+local AutoFarm = { StealDollars = false, AutoCollect = false, AutoBuild = false, AutoHillRemoval = false }
+local Trolling = { TargetPlayer = nil, Fling = false, Targeting = false }
+local Esp = {}
+local AntiAFK = false
+local OuxiHubOP = "https://raw.githubusercontent.com/EdgeYHub/777/main/OuxiHub" -- Link mẫu, bạn có thể đổi lại
+
+-- // Các hàm bổ trợ cấu hình hệ thống
+local function GetPlayerFromDisplayOrUserName(text)
+    text = text:lower()
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Name:lower():match(text) or p.DisplayName:lower():match(text) then
+            return p
+        end
+    end
+    return nil
+end
+
+local function FlingRequest()
+    print("Fling Status:", Trolling.Fling, "on Target:", Trolling.TargetPlayer)
+    -- Thêm code logic Fling thực tế của bạn ở đây nếu có
+end
+
+local function TargetingRequest()
+    print("Targeting Status:", Trolling.Targeting, "on Target:", Trolling.TargetPlayer)
+    -- Thêm code logic Teleport/Target thực tế ở đây
+end
 
 --// Safe Humanoid Getter
 local function getHumanoid()
@@ -143,3 +170,178 @@ Rayfield:Notify({
     Content = "Version 2.0 Ready!",
     Duration = 5
 })
+
+-- ================= NEW TABS (FIXED) =================
+local Tab = Window:CreateTab("Farm", 107364918194164)
+local Tabe = Window:CreateTab("Combat", 80964454894155)
+local Tab2 = Window:CreateTab("Trolling", 108044792581952)
+local Tab3 = Window:CreateTab("Other Scripts", 11570895459)
+local Tab2e = Window:CreateTab("Other", 9405921255)
+
+Tab:CreateButton({
+	Name = "Update Tycoon Position (Use it if you are not teleported to your Tycoon)",
+	Callback = function()
+		local Tycoon = workspace:WaitForChild("Tycoons"):FindFirstChild(lp.Name) -- Sửa thành lp.Name
+		if Tycoon and lp.Character then
+			lp.Character:PivotTo(Tycoon.Auxiliary.Spawn:FindFirstChildOfClass("SpawnLocation").CFrame)
+		end
+	end,
+})  
+
+Tab:CreateToggle({
+	Name = "Steal Dollars",
+	CurrentValue = false,
+	Flag = "Toggle1", 
+	Callback = function(Value)
+		AutoFarm.StealDollars = Value
+	end,
+})
+
+Tab:CreateToggle({
+	Name = "Auto Collect",
+	CurrentValue = false,
+	Flag = "Toggle2", 
+	Callback = function(Value)
+		AutoFarm.AutoCollect = Value
+	end,
+})
+
+Tab:CreateToggle({
+	Name = "Auto Build",
+	CurrentValue = false,
+	Flag = "Toggle3", 
+	Callback = function(Value)
+		AutoFarm.AutoBuild = Value
+	end,
+})
+
+Tab:CreateToggle({
+	Name = "Auto Control Point Removal",
+	CurrentValue = false,
+	Flag = "Toggle_Hill", 
+	Callback = function(Value)
+		AutoFarm.AutoHillRemoval = Value
+	end,
+})
+
+Tab2:CreateToggle({
+	Name = "Fling",
+	CurrentValue = false,
+	Flag = "Toggle4", 
+	Callback = function(Value)
+		if Value then
+			if Trolling.TargetPlayer then
+				Trolling.Fling = true
+				FlingRequest()
+			else
+				Rayfield:Notify({
+					Title = "Error",
+					Content = "Set Target Player First!",
+					Duration = 4,
+					Image = 1745872910,
+				})
+			end
+		else
+			Trolling.Fling = false
+			FlingRequest()
+		end
+	end,
+})
+
+Tab2:CreateToggle({
+	Name = "Targeting",
+	CurrentValue = false,
+	Flag = "Toggle7", 
+	Callback = function(Value)
+		if Value then
+			if Trolling.TargetPlayer then
+				Trolling.Targeting = true
+				TargetingRequest()
+			else
+				Rayfield:Notify({
+					Title = "Error",
+					Content = "Set Target Player First!",
+					Duration = 4,
+					Image = 1745872910,
+				})
+			end
+		else
+			Trolling.Targeting = false
+			TargetingRequest()
+		end
+	end,
+})
+
+Tab2:CreateInput({
+	Name = "Target Player",
+	PlaceholderText = "Enter Display Name or UserName",
+	RemoveTextAfterFocusLost = false,
+	Callback = function(Text)
+		local p = GetPlayerFromDisplayOrUserName(Text)
+		if p then
+			Trolling.TargetPlayer = p
+            Rayfield:Notify({Title = "Success", Content = "Target set to: " .. p.Name, Duration = 3})
+		else
+			Rayfield:Notify({
+				Title = "Error",
+				Content = "Failed to find Player with name: "..Text,
+				Duration = 4,
+				Image = 1745872910,
+			})
+		end
+	end,
+})
+
+Tab2e:CreateToggle({
+	Name = "Anti AFK",
+	CurrentValue = false,
+	Flag = "Toggle6", 
+	Callback = function(Value)
+		AntiAFK = Value
+	end,
+})
+
+Tabe:CreateButton({
+	Name = "Add Esp",
+	Callback = function()
+		Esp.Box = false
+		Esp.BoxColor = Color3.fromRGB(255,255,255)
+		Esp.BoxOutline = true
+		Esp.BoxOutlineColor = Color3.fromRGB(0,0,0)
+		Esp.HealthBar = true
+		Esp.HealthBarSide = "Left"
+		Esp.Names = true
+		Esp.NamesColor = Color3.fromRGB(255,255,255)
+		Esp.NamesOutline = true
+		Esp.NamesFont = 2
+		Esp.NamesSize = 13
+        Rayfield:Notify({Title = "ESP", Content = "ESP settings applied!", Duration = 2})
+	end,
+})  
+
+Rayfield:Notify({
+	Title = "Loaded!",
+	Content = "Star Yield",
+	Duration = 4,
+	Image = 4483362458,
+})
+
+Tab3:CreateSection("OP Scripts")
+
+Tab3:CreateButton({
+	Name = "Execute Ouxi Hub (By SkireScripts From ScriptBlox)",
+	Callback = function()
+		loadstring(game:HttpGet(OuxiHubOP))() -- Sửa HttpGet thành game:HttpGet
+	end,
+})  
+
+-- Copy discord link vào clipboard khi chạy script
+setclipboard("https://discord.gg/ZCQYPBuaN2")  
+
+Rayfield:Notify({
+	Title = "Join our Discord Server",
+	Content = "Link In Your Clipboard",
+	Duration = 8,
+	Image = 101192191207677,
+})
+
