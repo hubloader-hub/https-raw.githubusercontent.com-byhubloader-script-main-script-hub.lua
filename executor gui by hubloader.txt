@@ -199,17 +199,6 @@ box.ClearTextOnFocus = false
 box.ZIndex = 2
 box.Parent = main
 
-local function executeScript(scriptSource)
-    if not scriptSource or scriptSource == "" then return end
-    local f, err = loadstring(scriptSource)
-    if f then
-        local ok, runErr = pcall(f)
-        if not ok then warn("[HubLoader] Runtime: " .. tostring(runErr)) end
-    else
-        warn("[HubLoader] Syntax: " .. tostring(err))
-    end
-end
-
 local function makeBtn(text, posX, posY, w)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, w or 110, 0, 33)
@@ -247,7 +236,13 @@ cutBtn.MouseButton1Click:Connect(function()
 end)
 
 execBtn.MouseButton1Click:Connect(function()
-    executeScript(box.Text)
+    local f, err = loadstring(box.Text)
+    if f then
+        local ok, runErr = pcall(f)
+        if not ok then warn("[HubLoader] Runtime: " .. tostring(runErr)) end
+    else
+        warn("[HubLoader] Syntax: " .. tostring(err))
+    end
 end)
 
 deleteBtn.MouseButton1Click:Connect(function()
@@ -298,8 +293,8 @@ local function makeScrollSection(title_text, posX, posY, height)
     return sf
 end
 
-local GuiScroll  = makeScrollSection("script Gui", MID_X, 43, MID_INNER_H)
-local animScroll = makeScrollSection("Support", MID_X, 43 + MID_INNER_H + 26, MID_INNER_H)
+local hubScroll  = makeScrollSection("script hub",       MID_X, 43,                    MID_INNER_H)
+local animScroll = makeScrollSection("script animation", MID_X, 43 + MID_INNER_H + 26, MID_INNER_H)
 
 local function addMidBtn(scroll, name, scriptText)
     local btn = Instance.new("TextButton")
@@ -313,99 +308,13 @@ local function addMidBtn(scroll, name, scriptText)
     btn.ZIndex = 3
     btn.Parent = scroll
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-    btn.MouseButton1Click:Connect(function() 
-        executeScript(scriptText) 
-    end)
+    btn.MouseButton1Click:Connect(function() box.Text = scriptText end)
 end
 
-addMidBtn(GuiScroll,  "1x1x1x1", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/MrWitzbold/1x1x1x1-Gui/refs/heads/main/main.lua"))()]])
-addMidBtn(GuiScroll,  "project soulhack62", [[loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Universal-script-80961"))()]])
-
-addMidBtn(animScroll, "fixlag", [[local function clean(v)
-    if v:IsA("BasePart") then
-        v.Material = Enum.Material.SmoothPlastic
-        v.Reflectance = 0
-    elseif v:IsA("Decal") or v:IsA("Texture") then
-        v:Destroy()
-    elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") or v:IsA("Sparkles") or v:IsA("Fire") then
-        v.Enabled = false
-    elseif v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Clouds") or v:IsA("Sky") then
-        v:Destroy()
-    end
-end
-for _, v in ipairs(game:GetDescendants()) do clean(v) end
-game.DescendantAdded:Connect(clean)]])
-
-addMidBtn(animScroll, "esp (bật/tắt)", [[if _G.ESP_Conn then
-    _G.ESP_Conn:Disconnect()
-    _G.ESP_Conn = nil
-    for _, p in ipairs(game.Players:GetPlayers()) do
-        if p.Character then
-            for _, b in ipairs(p.Character:GetChildren()) do
-                if b:IsA("BoxHandleAdornment") then b:Destroy() end
-            end
-            local h = p.Character:FindFirstChild("Head")
-            if h then
-                local tag = h:FindFirstChild("ESPTag")
-                if tag then tag:Destroy() end
-            end
-        end
-    end
-else
-    local function drawESP(p)
-        if p == game.Players.LocalPlayer then return end
-        local function cAdded(char)
-            char:WaitForChild("HumanoidRootPart")
-            task.wait(0.5)
-            for _, b in ipairs(char:GetChildren()) do
-                if b:IsA("BasePart") then
-                    local box = Instance.new("BoxHandleAdornment")
-                    box.Size = b.Size + Vector3.new(0.1, 0.1, 0.1)
-                    box.AlwaysOnTop = true
-                    box.ZIndex = 5
-                    box.Color3 = Color3.fromRGB(255, 0, 0)
-                    box.Adornee = b
-                    box.Transparency = 0.5
-                    box.Parent = char
-                end
-            end
-            local head = char:WaitForChild("Head")
-            local bb = Instance.new("BillboardGui")
-            bb.Name = "ESPTag"
-            bb.Size = UDim2.new(0, 200, 0, 50)
-            bb.AlwaysOnTop = true
-            bb.ExtentsOffset = Vector3.new(0, 2.5, 0)
-            bb.Parent = head
-            local tl = Instance.new("TextLabel")
-            tl.Size = UDim2.new(1, 0, 1, 0)
-            tl.BackgroundTransparency = 1
-            tl.TextColor3 = Color3.fromRGB(255, 255, 255)
-            tl.TextStrokeTransparency = 0
-            tl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-            tl.Font = Enum.Font.SourceSansBold
-            tl.TextSize = 13
-            tl.Parent = bb
-            local hum = char:WaitForChild("Humanoid")
-            local hrp = char:WaitForChild("HumanoidRootPart")
-            local conn
-            conn = game:GetService("RunService").RenderStepped:Connect(function()
-                if not char:IsDescendantOf(workspace) or not hum or hum.Health <= 0 then
-                    conn:Disconnect()
-                    return
-                end
-                local lp = game.Players.LocalPlayer
-                if lp and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                    local dist = math.floor((hrp.Position - lp.Character.HumanoidRootPart.Position).Magnitude)
-                    tl.Text = p.Name .. " | " .. math.floor(hum.Health) .. " | " .. dist .. "m"
-                end
-            end)
-        end
-        if p.Character then task.spawn(cAdded, p.Character) end
-        p.CharacterAdded:Connect(cAdded)
-    end
-    for _, p in ipairs(game.Players:GetPlayers()) do drawESP(p) end
-    _G.ESP_Conn = game.Players.PlayerAdded:Connect(drawESP)
-end]])
+addMidBtn(hubScroll,  "hub example 1", [[print("hub 1")]])
+addMidBtn(hubScroll,  "hub example 2", [[print("hub 2")]])
+addMidBtn(animScroll, "anim example 1", [[print("anim 1")]])
+addMidBtn(animScroll, "anim example 2", [[print("anim 2")]])
 
 local RIGHT_X = MID_X + MID_W + 10
 local RIGHT_W = MENU_W - RIGHT_X - 10
@@ -447,9 +356,7 @@ local function addButton(name, scriptText)
     btn.ZIndex = 3
     btn.Parent = scroll
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-    btn.MouseButton1Click:Connect(function() 
-        executeScript(scriptText) 
-    end)
+    btn.MouseButton1Click:Connect(function() box.Text = scriptText end)
 end
 
 addButton("hồi sinh", [[local player = game.Players.LocalPlayer
@@ -463,7 +370,7 @@ addButton("Primadon", [[loadstring(game:HttpGet("https://pastebin.com/raw/37iQzQ
 addButton("Red Sword Pickaxe", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ProBypasserHax1/Idkkk/refs/heads/main/Red%20Sword%20Pickaxe.txt"))()]])
 addButton("Angel", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/nicolasbarbosa323/the-angel/refs/heads/main/The%20Angel.txt"))()]])
 addButton("Guest 666", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gObl00x/My-Scripts/refs/heads/main/Guest%20666.lua"))()]])
-addButton("dark titan", [[print("Dark Titan")]])
+addButton("dark titan", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gitezgitgit/Dark-Titan/refs/heads/main/DARK%20TITAN%20SCRIPT%20SUPER%20RARE.txt"))()]])
 addButton("soul reaper", [[loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Soul-Reaper-55330"))()]])
 addButton("Goner", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gObl00x/My-Converts/refs/heads/main/Goner.lua"))()]])
 addButton("wally west", [[loadstring(game:HttpGet("https://pastefy.app/N1v3fGIS/raw"))()]])
@@ -525,4 +432,82 @@ local function doMenuGlitch()
     conn = RunService.Heartbeat:Connect(function(dt)
         if elapsed >= 0.28 then
             for _, gl in ipairs(menuGlitchLines) do gl.BackgroundTransparency = 1 end
-        
+            menuRGB.BackgroundTransparency = 1
+            main.Position = basePos
+            conn:Disconnect()
+            return
+        end
+        elapsed = elapsed + dt
+
+        for _, gl in ipairs(menuGlitchLines) do
+            gl.Position = UDim2.new(math.random(0,20)/100, 0, math.random(5,92)/100, 0)
+            gl.Size = UDim2.new(math.random(15,95)/100, 0, 0, math.random(1,7))
+            gl.BackgroundColor3 = Color3.fromRGB(math.random(0,255),math.random(0,255),math.random(0,255))
+            gl.BackgroundTransparency = math.random(15,55)/100
+        end
+
+        menuRGB.BackgroundColor3 = Color3.fromRGB(math.random(0,255), 0, math.random(80,255))
+        menuRGB.BackgroundTransparency = math.random(90,98)/100
+
+        if math.random(1, 3) == 1 then
+            main.Position = UDim2.new(basePos.X.Scale, basePos.X.Offset + math.random(-2,2), basePos.Y.Scale, basePos.Y.Offset + math.random(-1,1))
+        else
+            main.Position = basePos
+        end
+    end)
+end
+
+task.spawn(function()
+    while true do
+        task.wait(1.25)
+        doMenuGlitch()
+        task.wait(0.3)
+    end
+end)
+
+task.spawn(function()
+    local introActive = true
+
+    local glitchConn = RunService.Heartbeat:Connect(function()
+        if not introActive then return end
+
+        for i, layer in ipairs(rgbLayers) do
+            layer.Position = UDim2.new(0, math.random(-12,12), 0, math.random(-6,6))
+            layer.BackgroundTransparency = math.random(85,97)/100
+        end
+
+        for _, bar in ipairs(glitchBars) do
+            bar.Position = UDim2.new(math.random(0,40)/100, math.random(-40,40), math.random(0,100)/100, 0)
+            bar.Size = UDim2.new(math.random(8,90)/100, 0, 0, math.random(1,12))
+            bar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            bar.BackgroundTransparency = math.random(70, 95)/100
+        end
+    end)
+
+    task.wait(0.5)
+    for _, lbl in ipairs(wordLabels) do
+        TweenService:Create(lbl, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+        task.wait(0.4)
+    end
+
+    task.wait(1.5)
+
+    local fadeTween = TweenService:Create(introFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1})
+    fadeTween:Play()
+    
+    for _, lbl in ipairs(wordLabels) do
+        TweenService:Create(lbl, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
+    end
+    
+    fadeTween.Completed:Wait()
+
+    introActive = false
+    glitchConn:Disconnect()
+    introFrame:Destroy()
+
+    main.Size = UDim2.new(0, 0, 0, 0)
+    main.Visible = true
+    toggleBtn.Visible = true
+
+    TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, MENU_W, 0, MENU_H)}):Play()
+end)
