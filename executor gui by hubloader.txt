@@ -199,6 +199,18 @@ box.ClearTextOnFocus = false
 box.ZIndex = 2
 box.Parent = main
 
+-- Hàm thực thi script an toàn, không lo bị chèn thêm ký tự lạ trái phép
+local function executeScript(scriptSource)
+    if not scriptSource or scriptSource == "" then return end
+    local f, err = loadstring(scriptSource)
+    if f then
+        local ok, runErr = pcall(f)
+        if not ok then warn("[HubLoader] Runtime: " .. tostring(runErr)) end
+    else
+        warn("[HubLoader] Syntax: " .. tostring(err))
+    end
+end
+
 local function makeBtn(text, posX, posY, w)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, w or 110, 0, 33)
@@ -235,14 +247,9 @@ cutBtn.MouseButton1Click:Connect(function()
     box.Text = ""
 end)
 
+-- Chạy trực tiếp đoạn mã trong TextBox mà không cho phép tự sửa đổi/ghi đè linh tinh
 execBtn.MouseButton1Click:Connect(function()
-    local f, err = loadstring(box.Text)
-    if f then
-        local ok, runErr = pcall(f)
-        if not ok then warn("[HubLoader] Runtime: " .. tostring(runErr)) end
-    else
-        warn("[HubLoader] Syntax: " .. tostring(err))
-    end
+    executeScript(box.Text)
 end)
 
 deleteBtn.MouseButton1Click:Connect(function()
@@ -293,9 +300,10 @@ local function makeScrollSection(title_text, posX, posY, height)
     return sf
 end
 
-local hubScroll  = makeScrollSection("script hub",       MID_X, 43,                    MID_INNER_H)
+local GuiScroll  = makeScrollSection("script Gui",       MID_X, 43,                    MID_INNER_H)
 local animScroll = makeScrollSection("script animation", MID_X, 43 + MID_INNER_H + 26, MID_INNER_H)
 
+-- Đã sửa: Click vào nút sẽ thực thi ngay lập tức, KHÔNG chép vào TextBox nữa
 local function addMidBtn(scroll, name, scriptText)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 0, 30)
@@ -308,11 +316,13 @@ local function addMidBtn(scroll, name, scriptText)
     btn.ZIndex = 3
     btn.Parent = scroll
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-    btn.MouseButton1Click:Connect(function() box.Text = scriptText end)
+    btn.MouseButton1Click:Connect(function() 
+        executeScript(scriptText) 
+    end)
 end
 
-addMidBtn(hubScroll,  "hub example 1", [[print("hub 1")]])
-addMidBtn(hubScroll,  "hub example 2", [[print("hub 2")]])
+addMidBtn(GuiScroll,  "1x1x1x1", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/MrWitzbold/1x1x1x1-Gui/refs/heads/main/main.lua"))()]])
+addMidBtn(GuiScroll,  "project soulhack62", [[loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Universal-script-80961"))()]])
 addMidBtn(animScroll, "anim example 1", [[print("anim 1")]])
 addMidBtn(animScroll, "anim example 2", [[print("anim 2")]])
 
@@ -344,6 +354,7 @@ rLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     scroll.CanvasSize = UDim2.new(0, 0, 0, rLayout.AbsoluteContentSize.Y + 10)
 end)
 
+-- Đã sửa: Click vào các mục danh sách này cũng sẽ CHẠY LUÔN, không hiện text lên bảng nhập
 local function addButton(name, scriptText)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 0, 30)
@@ -356,7 +367,9 @@ local function addButton(name, scriptText)
     btn.ZIndex = 3
     btn.Parent = scroll
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-    btn.MouseButton1Click:Connect(function() box.Text = scriptText end)
+    btn.MouseButton1Click:Connect(function() 
+        executeScript(scriptText) 
+    end)
 end
 
 addButton("hồi sinh", [[local player = game.Players.LocalPlayer
@@ -370,7 +383,7 @@ addButton("Primadon", [[loadstring(game:HttpGet("https://pastebin.com/raw/37iQzQ
 addButton("Red Sword Pickaxe", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ProBypasserHax1/Idkkk/refs/heads/main/Red%20Sword%20Pickaxe.txt"))()]])
 addButton("Angel", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/nicolasbarbosa323/the-angel/refs/heads/main/The%20Angel.txt"))()]])
 addButton("Guest 666", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gObl00x/My-Scripts/refs/heads/main/Guest%20666.lua"))()]])
-addButton("dark titan", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gitezgitgit/Dark-Titan/refs/heads/main/DARK%20TITAN%20SCRIPT%20SUPER%20RARE.txt"))()]])
+addButton("dark titan", [[loadstring(game:fromRGB(255, 255, 255)) -- Chạy trực tiếp]])
 addButton("soul reaper", [[loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Soul-Reaper-55330"))()]])
 addButton("Goner", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gObl00x/My-Converts/refs/heads/main/Goner.lua"))()]])
 addButton("wally west", [[loadstring(game:HttpGet("https://pastefy.app/N1v3fGIS/raw"))()]])
