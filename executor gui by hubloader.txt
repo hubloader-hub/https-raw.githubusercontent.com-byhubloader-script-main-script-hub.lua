@@ -1,184 +1,368 @@
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local GuiService = game:GetService("GuiService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
 local Player = Players.LocalPlayer
 
--- GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "HubLoaderGui"
 gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
 gui.Parent = Player:WaitForChild("PlayerGui")
 
--- MAIN FRAME
+local introFrame = Instance.new("Frame")
+introFrame.Size = UDim2.new(1, 0, 1, 0)
+introFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+introFrame.BorderSizePixel = 0
+introFrame.ZIndex = 100
+introFrame.Parent = gui
+
+local scanline = Instance.new("Frame")
+scanline.Size = UDim2.new(1, 0, 1, 0)
+scanline.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+scanline.BackgroundTransparency = 0.7
+scanline.BorderSizePixel = 0
+scanline.ZIndex = 101
+scanline.Parent = introFrame
+
+local rgbColors = {
+    Color3.fromRGB(255, 0, 60),
+    Color3.fromRGB(0, 255, 200),
+    Color3.fromRGB(180, 0, 255),
+}
+local rgbLayers = {}
+for _, c in ipairs(rgbColors) do
+    local layer = Instance.new("Frame")
+    layer.Size = UDim2.new(1, 0, 1, 0)
+    layer.BackgroundColor3 = c
+    layer.BackgroundTransparency = 0.93
+    layer.BorderSizePixel = 0
+    layer.ZIndex = 102
+    layer.Parent = introFrame
+    table.insert(rgbLayers, layer)
+end
+
+local glitchBars = {}
+for i = 1, 16 do
+    local bar = Instance.new("Frame")
+    bar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    bar.BackgroundTransparency = 1
+    bar.BorderSizePixel = 0
+    bar.ZIndex = 103
+    bar.Parent = introFrame
+    table.insert(glitchBars, bar)
+end
+
+local sliceBars = {}
+for i = 1, 7 do
+    local sb = Instance.new("Frame")
+    sb.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    sb.BackgroundTransparency = 1
+    sb.BorderSizePixel = 0
+    sb.ZIndex = 104
+    sb.Parent = introFrame
+    table.insert(sliceBars, sb)
+end
+
+local introShakeX, introShakeY = 0, 0
+local introShakeFrame = Instance.new("Frame")
+introShakeFrame.Size = UDim2.new(1, 0, 1, 0)
+introShakeFrame.BackgroundTransparency = 1
+introShakeFrame.BorderSizePixel = 0
+introShakeFrame.ZIndex = 105
+introShakeFrame.Parent = introFrame
+
+local wordsContainer = Instance.new("Frame")
+wordsContainer.Size = UDim2.new(1, 0, 0, 80)
+wordsContainer.Position = UDim2.new(0, 0, 0.5, -40)
+wordsContainer.BackgroundTransparency = 1
+wordsContainer.ZIndex = 110
+wordsContainer.Parent = introFrame
+
+local wLayout = Instance.new("UIListLayout")
+wLayout.FillDirection = Enum.FillDirection.Horizontal
+wLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+wLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+wLayout.Padding = UDim.new(0, 12)
+wLayout.Parent = wordsContainer
+
+local wordLabels = {}
+for _, word in ipairs({"script", "by", "HubLoader"}) do
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(0, 0, 1, 0)
+    lbl.AutomaticSize = Enum.AutomaticSize.X
+    lbl.BackgroundTransparency = 1
+    lbl.Text = word
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 38
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextTransparency = 1
+    lbl.ZIndex = 111
+    lbl.Parent = wordsContainer
+    table.insert(wordLabels, lbl)
+end
+
+local MENU_W = 780
+local MENU_H = 480
+local BTN_COLOR = Color3.fromRGB(40, 40, 40)
+local SCROLL_W = 170
+local MID_W = 170
+local LEFT_W = MENU_W - SCROLL_W - MID_W - 40
+
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 600, 0, 400)
+main.Size = UDim2.new(0, 0, 0, 0)
 main.Position = UDim2.new(0.5, 0, 0.5, 0)
 main.AnchorPoint = Vector2.new(0.5, 0.5)
-main.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+main.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
 main.BorderSizePixel = 0
+main.Visible = false
+main.ClipsDescendants = true
+main.ZIndex = 1
 main.Parent = gui
 
--- TOP BAR (vùng drag)
 local top = Instance.new("Frame")
-top.Size = UDim2.new(1, 0, 0, 40)
-top.Position = UDim2.new(0, 0, 0, 0)
-top.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+top.Size = UDim2.new(1, 0, 0, 38)
+top.BackgroundColor3 = Color3.fromRGB(30, 30, 34)
 top.BorderSizePixel = 0
 top.Active = true
 top.Selectable = true
+top.ZIndex = 2
 top.Parent = main
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 1, 0)
 title.BackgroundTransparency = 1
-title.Text = "HubLoader executor gui v2"
-title.Font = Enum.Font.SourceSansBold
-title.TextSize = 20
-title.TextColor3 = Color3.fromRGB(0, 0, 0)
+title.Text = "HubLoader Executor 3.1.8"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.TextColor3 = Color3.fromRGB(220, 220, 220)
+title.ZIndex = 3
 title.Parent = top
 
--- DRAG SYSTEM (không jump, không kéo camera)
 local dragging = false
-local dragStartPos = nil
-local startGuiPos = nil
+local dragInputId = nil
+local dragStartPos, startGuiPos
 
-local function updateDrag(input)
-if not dragging then return end
-local currentPos = input.Position
-local delta = currentPos - dragStartPos
-main.Position = UDim2.new(
-startGuiPos.X.Scale,
-startGuiPos.X.Offset + delta.X,
-startGuiPos.Y.Scale,
-startGuiPos.Y.Offset + delta.Y
-)
-end
-
-top.InputBegan:Connect(function(input, gameProcessed)
-if gameProcessed then return end
-if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-dragging = true
-dragStartPos = input.Position
-startGuiPos = main.Position
-GuiService.SelectedObject = top
-if UserInputService.MouseEnabled then
-UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-end
-local conn
-conn = input.Changed:Connect(function()
-if input.UserInputState == Enum.UserInputState.End then
-dragging = false
-GuiService.SelectedObject = nil
-conn:Disconnect()
-end
-end)
-end
+top.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    local isTouch = input.UserInputType == Enum.UserInputType.Touch
+    local isMouse = input.UserInputType == Enum.UserInputType.MouseButton1
+    if (isTouch or isMouse) and not dragging then
+        dragging = true
+        dragInputId = input
+        dragStartPos = input.Position
+        startGuiPos = main.Position
+        local conn
+        conn = input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                if dragInputId == input then
+                    dragging = false
+                    dragInputId = nil
+                end
+                conn:Disconnect()
+            end
+        end)
+    end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-updateDrag(input)
-end
+    if not dragging or input ~= dragInputId then return end
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        local delta = input.Position - dragStartPos
+        main.Position = UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y)
+    end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
-if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-dragging = false
-GuiService.SelectedObject = nil
-end
+    if input == dragInputId then
+        dragging = false
+        dragInputId = nil
+    end
 end)
 
--- SCRIPT BOX (TRÁI)
+local LEFT_X = 10
+local BOX_H = MENU_H - 38 - 85
+
 local box = Instance.new("TextBox")
-box.Size = UDim2.new(0, 300, 0, 200)
-box.Position = UDim2.new(0, 10, 0, 50)
-box.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-box.TextColor3 = Color3.fromRGB(255, 255, 255)
+box.Size = UDim2.new(0, LEFT_W, 0, BOX_H)
+box.Position = UDim2.new(0, LEFT_X, 0, 43)
+box.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+box.TextColor3 = Color3.fromRGB(200, 255, 200)
 box.Font = Enum.Font.Code
-box.TextSize = 14
+box.TextSize = 13
 box.MultiLine = true
 box.TextWrapped = true
 box.TextXAlignment = Enum.TextXAlignment.Left
 box.TextYAlignment = Enum.TextYAlignment.Top
 box.ClearTextOnFocus = false
+box.ZIndex = 2
 box.Parent = main
 
--- EXEC
-local exec = Instance.new("TextButton")
-exec.Size = UDim2.new(0, 140, 0, 35)
-exec.Position = UDim2.new(0, 10, 1, -45)
-exec.Text = "executor"
-exec.Font = Enum.Font.SourceSansBold
-exec.TextSize = 16
-exec.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-exec.TextColor3 = Color3.fromRGB(255, 255, 255)
-exec.Parent = main
-
-exec.MouseButton1Click:Connect(function()
-local f = loadstring(box.Text)
-if f then pcall(f) end
-end)
-
--- CLEAR
-local clear = Instance.new("TextButton")
-clear.Size = UDim2.new(0, 140, 0, 35)
-clear.Position = UDim2.new(0, 170, 1, -45)
-clear.Text = "xóa"
-clear.Font = Enum.Font.SourceSansBold
-clear.TextSize = 16
-clear.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-clear.TextColor3 = Color3.fromRGB(255, 255, 255)
-clear.Parent = main
-
-clear.MouseButton1Click:Connect(function()
-box.Text = ""
-end)
-
--- SCROLL FRAME (PHẢI)
-local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(0, 160, 0, 200)
-scroll.Position = UDim2.new(1, -170, 0, 50)
-scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-scroll.ScrollBarImageTransparency = 0
-scroll.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
-scroll.BorderSizePixel = 0
-scroll.Parent = main
-
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 8)
-layout.Parent = scroll
-
-layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
-end)
-
--- FUNCTION CREATE BUTTON
-local function addButton(name, scriptText)
-local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(1, -10, 0, 35)
-btn.Text = name
-btn.Font = Enum.Font.SourceSansBold
-btn.TextSize = 14
-btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn.Parent = scroll
-
-btn.MouseButton1Click:Connect(function()  
-    box.Text = scriptText  
-end)
-
+local function makeBtn(text, posX, posY, w)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, w or 110, 0, 33)
+    btn.Position = UDim2.new(0, posX, 0, posY)
+    btn.Text = text
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.BackgroundColor3 = BTN_COLOR
+    btn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    btn.BorderSizePixel = 0
+    btn.ZIndex = 2
+    btn.Parent = main
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    return btn
 end
 
--- BUTTONS
+local BTN_Y1 = 38 + BOX_H + 8
+local BTN_Y2 = BTN_Y1 + 38
+local HALF_W = math.floor(LEFT_W / 2) - 4
+
+local pasteBtn  = makeBtn("Paste",    LEFT_X,              BTN_Y1, HALF_W)
+local cutBtn    = makeBtn("Cut",      LEFT_X + HALF_W + 5, BTN_Y1, HALF_W)
+local execBtn   = makeBtn("Executor", LEFT_X,              BTN_Y2, HALF_W)
+local deleteBtn = makeBtn("Delete",   LEFT_X + HALF_W + 5, BTN_Y2, HALF_W)
+
+pasteBtn.MouseButton1Click:Connect(function()
+    local ok, clip = pcall(function() return getclipboard() end)
+    if ok and clip then box.Text = clip
+    else box:CaptureFocus() end
+end)
+
+cutBtn.MouseButton1Click:Connect(function()
+    pcall(function() setclipboard(box.Text) end)
+    box.Text = ""
+end)
+
+execBtn.MouseButton1Click:Connect(function()
+    local f, err = loadstring(box.Text)
+    if f then
+        local ok, runErr = pcall(f)
+        if not ok then warn("[HubLoader] Runtime: " .. tostring(runErr)) end
+    else
+        warn("[HubLoader] Syntax: " .. tostring(err))
+    end
+end)
+
+deleteBtn.MouseButton1Click:Connect(function()
+    box.Text = ""
+end)
+
+local MID_X = LEFT_X + LEFT_W + 10
+local MID_INNER_H = math.floor((MENU_H - 38 - 20) / 2) - 22
+
+local function makeScrollSection(title_text, posX, posY, height)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(0, MID_W, 0, 18)
+    lbl.Position = UDim2.new(0, posX, 0, posY)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = title_text
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 12
+    lbl.TextColor3 = Color3.fromRGB(160, 160, 180)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 2
+    lbl.Parent = main
+
+    local sf = Instance.new("ScrollingFrame")
+    sf.Size = UDim2.new(0, MID_W, 0, height)
+    sf.Position = UDim2.new(0, posX, 0, posY + 20)
+    sf.CanvasSize = UDim2.new(0, 0, 0, 0)
+    sf.ScrollBarThickness = 4
+    sf.BackgroundColor3 = Color3.fromRGB(24, 24, 28)
+    sf.BorderSizePixel = 0
+    sf.ZIndex = 2
+    sf.Parent = main
+
+    local lo = Instance.new("UIListLayout")
+    lo.Padding = UDim.new(0, 5)
+    lo.SortOrder = Enum.SortOrder.LayoutOrder
+    lo.Parent = sf
+
+    local pad = Instance.new("UIPadding")
+    pad.PaddingTop = UDim.new(0, 5)
+    pad.PaddingLeft = UDim.new(0, 4)
+    pad.PaddingRight = UDim.new(0, 4)
+    pad.Parent = sf
+
+    lo:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        sf.CanvasSize = UDim2.new(0, 0, 0, lo.AbsoluteContentSize.Y + 10)
+    end)
+
+    return sf
+end
+
+local GuiScroll  = makeScrollSection("script Gui",       MID_X, 43,                    MID_INNER_H)
+local animScroll = makeScrollSection("script animation", MID_X, 43 + MID_INNER_H + 26, MID_INNER_H)
+
+local function addMidBtn(scroll, name, scriptText)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 30)
+    btn.Text = name
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.BackgroundColor3 = Color3.fromRGB(44, 44, 50)
+    btn.TextColor3 = Color3.fromRGB(210, 210, 210)
+    btn.BorderSizePixel = 0
+    btn.ZIndex = 3
+    btn.Parent = scroll
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+    btn.MouseButton1Click:Connect(function() box.Text = scriptText end)
+end
+
+addMidBtn(GuiScroll,  "1x1x1x1", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/MrWitzbold/1x1x1x1-Gui/refs/heads/main/main.lua"))()]])
+addMidBtn(GuiScroll,  "project soulhack62", [[loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Universal-script-80961"))]])
+addMidBtn(animScroll, "anim example 1", [[print("anim 1")]])
+addMidBtn(animScroll, "anim example 2", [[print("anim 2")]])
+
+local RIGHT_X = MID_X + MID_W + 10
+local RIGHT_W = MENU_W - RIGHT_X - 10
+
+local scroll = Instance.new("ScrollingFrame")
+scroll.Size = UDim2.new(0, RIGHT_W, 0, MENU_H - 48)
+scroll.Position = UDim2.new(0, RIGHT_X, 0, 43)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.ScrollBarThickness = 5
+scroll.BackgroundColor3 = Color3.fromRGB(24, 24, 28)
+scroll.BorderSizePixel = 0
+scroll.ZIndex = 2
+scroll.Parent = main
+
+local rLayout = Instance.new("UIListLayout")
+rLayout.Padding = UDim.new(0, 5)
+rLayout.SortOrder = Enum.SortOrder.LayoutOrder
+rLayout.Parent = scroll
+
+local rPad = Instance.new("UIPadding")
+rPad.PaddingTop = UDim.new(0, 5)
+rPad.PaddingLeft = UDim.new(0, 4)
+rPad.PaddingRight = UDim.new(0, 4)
+rPad.Parent = scroll
+
+rLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    scroll.CanvasSize = UDim2.new(0, 0, 0, rLayout.AbsoluteContentSize.Y + 10)
+end)
+
+local function addButton(name, scriptText)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 30)
+    btn.Text = name
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.BackgroundColor3 = Color3.fromRGB(44, 44, 50)
+    btn.TextColor3 = Color3.fromRGB(210, 210, 210)
+    btn.BorderSizePixel = 0
+    btn.ZIndex = 3
+    btn.Parent = scroll
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+    btn.MouseButton1Click:Connect(function() box.Text = scriptText end)
+end
+
 addButton("hồi sinh", [[local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local hrp = character:WaitForChild("HumanoidRootPart")
-
-hrp.CFrame = CFrame.new(-69.57, -221.99, 67.20)
-]])
+hrp.CFrame = CFrame.new(-69.57, -221.99, 67.20)]])
 addButton("natuge", [[loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-natuge-FE-73244"))()]])
 addButton("gojo tool", [[loadstring(game:HttpGet("https://pastebin.com/raw/vzqZcTAU"))()]])
 addButton("Mystic tool", [[loadstring(game:HttpGet("https://pastefy.app/7R72UhO9/raw", true))()]])
@@ -191,91 +375,139 @@ addButton("soul reaper", [[loadstring(game:HttpGet("https://rawscripts.net/raw/U
 addButton("Goner", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gObl00x/My-Converts/refs/heads/main/Goner.lua"))()]])
 addButton("wally west", [[loadstring(game:HttpGet("https://pastefy.app/N1v3fGIS/raw"))()]])
 addButton("neptunian v", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/NepV"))()]])
-addButton("Comedic Chao", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/Comedy"))()]])
-addButton("Blind Reaper", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/BLINDREAPER"))()]])
-addButton("KJ tool", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/Five%20Seasons"))()]])
+addButton("Comedic Chao", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/heads/main/Comedy"))()]])
+addButton("Blind Reaper", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/heads/main/BLINDREAPER"))()]])
+addButton("KJ tool", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/heads/main/Five%20Seasons"))()]])
 addButton("reevenge", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/nicolasbarbosa323/sin-dragon/refs/heads/main/reevenge%20hands.txt"))()]])
-addButton("Rainbow King", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/Rainbow%20Banisher"))()]])
+addButton("Rainbow King", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/heads/main/Rainbow%20Banisher"))()]])
 addButton("spider bot", [[loadstring(game:HttpGet("https://pastebin.com/raw/XNVWznPH"))()]])
-addButton("Void Boss", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/come%20back"))()]])
-addButton("Grab Knife v1 tool", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/retpirato/Roblox-Scripts/refs/heads/master/Grab%20Knife%20V1.lua"))()]])
+addButton("Void Boss", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/heads/main/come%20back"))()]])
+addButton("Grab Knife v1", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/retpirato/Roblox-Scripts/refs/heads/master/Grab%20Knife%20V1.lua"))()]])
 addButton("Lua Hammer", [[loadstring(game:HttpGet("https://pastefy.app/Nh7FVtvC/raw"))()]])
 addButton("determination", [[loadstring(game:HttpGet("https://pastebin.com/raw/SMrFaqxL"))()]])
 addButton("Road Rogue", [[loadstring(game:HttpGet("https://pastefy.app/9gxSdisY/raw"))()]])
 addButton("kill Bot", [[loadstring(game:HttpGet("https://pastebin.com/raw/yraarJ7m"))()]])
 addButton("internal War", [[loadstring(game:HttpGet("https://pastebin.com/raw/u7DbahA4"))()]])
-addButton("guts", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/refs/heads/main/GUTS"))()]])
+addButton("guts", [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ian49972/SCRIPTS/heads/main/GUTS"))()]])
 addButton("Demon Banisher", [[loadstring(game:HttpGet("https://pastebin.com/raw/2dHmbWwa"))()]])
 addButton("angel Of Dark", [[loadstring(game:HttpGet("https://pastebin.com/raw/cxskwTEQ"))()]])
 
-local toggle = Instance.new("ImageButton")
-toggle.Size = UDim2.new(0, 90, 0, 90)
-toggle.Position = UDim2.new(0.5, 0, 0.5, 0)
-toggle.AnchorPoint = Vector2.new(0.5, 0.5)
-toggle.Image = "rbxassetid://99222845225092"
-toggle.BackgroundTransparency = 1
-toggle.Parent = gui
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 100, 0, 30)
+toggleBtn.Position = UDim2.new(0, 5, 0.5, -15)
+toggleBtn.Text = "☰ Menu"
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.TextSize = 13
+toggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 34)
+toggleBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+toggleBtn.BorderSizePixel = 0
+toggleBtn.ZIndex = 10
+toggleBtn.Visible = false
+toggleBtn.Parent = gui
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 6)
+toggleBtn.MouseButton1Click:Connect(function() main.Visible = not main.Visible end)
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(1, 0)
-corner.Parent = toggle
+local menuGlitchLines = {}
+for i = 1, 8 do
+    local gl = Instance.new("Frame")
+    gl.BackgroundTransparency = 1
+    gl.BorderSizePixel = 0
+    gl.ZIndex = 6
+    gl.Parent = main
+    table.insert(menuGlitchLines, gl)
+end
 
-task.delay(3, function()
-TweenService:Create(
-toggle,
-TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-{Position = UDim2.new(0, 50, 0.5, 0)}
-):Play()
+local menuRGB = Instance.new("Frame")
+menuRGB.Size = UDim2.new(1, 0, 1, 0)
+menuRGB.BackgroundTransparency = 1
+menuRGB.BorderSizePixel = 0
+menuRGB.ZIndex = 7
+menuRGB.Parent = main
+
+local function doMenuGlitch()
+    if not main.Visible then return end
+    local basePos = main.Position
+    local elapsed = 0
+    local conn
+    conn = RunService.Heartbeat:Connect(function(dt)
+        if elapsed >= 0.28 then
+            for _, gl in ipairs(menuGlitchLines) do gl.BackgroundTransparency = 1 end
+            menuRGB.BackgroundTransparency = 1
+            main.Position = basePos
+            conn:Disconnect()
+            return
+        end
+        elapsed = elapsed + dt
+
+        for _, gl in ipairs(menuGlitchLines) do
+            gl.Position = UDim2.new(math.random(0,20)/100, 0, math.random(5,92)/100, 0)
+            gl.Size = UDim2.new(math.random(15,95)/100, 0, 0, math.random(1,7))
+            gl.BackgroundColor3 = Color3.fromRGB(math.random(0,255),math.random(0,255),math.random(0,255))
+            gl.BackgroundTransparency = math.random(15,55)/100
+        end
+
+        menuRGB.BackgroundColor3 = Color3.fromRGB(math.random(0,255), 0, math.random(80,255))
+        menuRGB.BackgroundTransparency = math.random(90,98)/100
+
+        if math.random(1, 3) == 1 then
+            main.Position = UDim2.new(basePos.X.Scale, basePos.X.Offset + math.random(-2,2), basePos.Y.Scale, basePos.Y.Offset + math.random(-1,1))
+        else
+            main.Position = basePos
+        end
+    end)
+end
+
+task.spawn(function()
+    while true do
+        task.wait(1.25)
+        doMenuGlitch()
+        task.wait(0.3)
+    end
 end)
 
-toggle.MouseButton1Click:Connect(function()
-main.Visible = not main.Visible
-end)
+task.spawn(function()
+    local introActive = true
 
-local mainImageId = "rbxassetid://99222845225092"
-local orbitRadius = 60
-local numOrbs = 8
-local speed = 1.5
+    local glitchConn = RunService.Heartbeat:Connect(function()
+        if not introActive then return end
 
-local orbFolder = Instance.new("Folder")
-orbFolder.Name = "OrbitOrbs"
-orbFolder.Parent = gui
+        for i, layer in ipairs(rgbLayers) do
+            layer.Position = UDim2.new(0, math.random(-12,12), 0, math.random(-6,6))
+            layer.BackgroundTransparency = math.random(85,97)/100
+        end
 
-local orbs = {}
-for i = 1, numOrbs do
-local orb = Instance.new("ImageLabel")
-orb.Size = UDim2.new(0, 10, 0, 10)
-orb.BackgroundTransparency = 1
-orb.Image = mainImageId
-orb.ImageTransparency = 0.4
-orb.AnchorPoint = Vector2.new(0.5, 0.5)
+        for _, bar in ipairs(glitchBars) do
+            bar.Position = UDim2.new(math.random(0,40)/100, math.random(-40,40), math.random(0,100)/100, 0)
+            bar.Size = UDim2.new(math.random(8,90)/100, 0, 0, math.random(1,12))
+            bar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            bar.BackgroundTransparency = math.random(70, 95)/100
+        end
+    end)
 
-local orbCorner = Instance.new("UICorner")  
-orbCorner.CornerRadius = UDim.new(1, 0)  
-orbCorner.Parent = orb  
-  
-orb.Parent = orbFolder  
-table.insert(orbs, orb)
+    task.wait(0.5)
+    for _, lbl in ipairs(wordLabels) do
+        TweenService:Create(lbl, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+        task.wait(0.4)
+    end
 
-end
+    task.wait(1.5)
 
-local timePassed = 0
-RunService.Heartbeat:Connect(function(deltaTime)
-if not toggle.Visible then
-for _, orb in ipairs(orbs) do orb.Visible = false end
-return
-end
+    local fadeTween = TweenService:Create(introFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1})
+    fadeTween:Play()
+    
+    for _, lbl in ipairs(wordLabels) do
+        TweenService:Create(lbl, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
+    end
+    
+    fadeTween.Completed:Wait()
 
-for _, orb in ipairs(orbs) do orb.Visible = true end  
-  
-timePassed = timePassed + deltaTime * speed  
-local centerPos = toggle.AbsolutePosition + toggle.AbsoluteSize / 2  
-  
-for i, orb in ipairs(orbs) do  
-    local angle = (timePassed + (i-1) * (2 * math.pi / numOrbs))  
-    local offsetX = math.cos(angle) * orbitRadius  
-    local offsetY = math.sin(angle) * orbitRadius  
-    orb.Position = UDim2.new(0, centerPos.X + offsetX - 5, 0, centerPos.Y + offsetY - 5)  
-end
+    introActive = false
+    glitchConn:Disconnect()
+    introFrame:Destroy()
 
+    main.Size = UDim2.new(0, 0, 0, 0)
+    main.Visible = true
+    toggleBtn.Visible = true
+
+    TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, MENU_W, 0, MENU_H)}):Play()
 end)
